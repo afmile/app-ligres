@@ -1,6 +1,6 @@
 # ⚽ App Ligres
 
-//![App Ligres Banner](https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6)
+
 
 Una app moderna para crear **alineaciones de fútbol 6v6 y 7v7** de forma visual, rápida e intuitiva.  
 Diseñada para equipos amateur, ligas locales y grupos de amigos apasionados por el fútbol.
