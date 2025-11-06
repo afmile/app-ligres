@@ -1,11 +1,12 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Player } from '../types';
+import { Player, BenchPlayer, TeamColor } from '../types';
 import PlayerMarker from './PlayerMarker';
 
 declare const html2canvas: any;
 
 interface SoccerFieldProps {
   players: Player[];
+  benchPlayers: BenchPlayer[];
   updatePlayerPosition: (id: number, x: number, y: number) => void;
   updatePlayerName: (id: number, newName: string) => void;
   onReset: () => void;
@@ -33,33 +34,47 @@ const VerticalFieldLinesSVG = () => (
     </svg>
 );
 
-const HorizontalFieldLinesSVG = () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 800 500"
-      className="absolute inset-0 w-full h-full"
-      preserveAspectRatio="none"
-    >
-      <defs>
-        <style>{`.line{stroke:#a3a3a3;stroke-opacity:0.6;stroke-width:3;fill:none;}`}</style>
-      </defs>
-      <rect x="1.5" y="1.5" width="797" height="497" className="line" />
-      <path d="M400 0 V500 M400 250 m0 -70 a70 70 0 1 0 0 140 a70 70 0 1 0 0 -140" className="line" />
-      <circle cx="400" cy="250" r="4" fill="#a3a3a3" fillOpacity="0.6" />
-      <path d="M0 90 H130 V410 H0 M800 90 H670 V410 H800" className="line" />
-      <path d="M0 180 H45 V320 H0 M800 180 H755 V320 H800" className="line" />
-      <circle cx="90" cy="250" r="3" fill="#a3a3a3" fillOpacity="0.6" />
-      <circle cx="710" cy="250" r="3" fill="#a3a3a3" fillOpacity="0.6" />
-      <path d="M130 180 A 60 70 0 0 0 130 320" className="line" />
-      <path d="M670 180 A 60 70 0 0 1 670 320" className="line" />
-    </svg>
-);
+const BenchList: React.FC<{ title: string; players: BenchPlayer[], teamColor: TeamColor }> = ({ title, players, teamColor }) => {
+    const teamColorClasses: Record<TeamColor, string> = {
+        red: 'bg-red-800/70 border-red-600',
+        blue: 'bg-blue-800/70 border-blue-600',
+        black: 'bg-gray-800/70 border-gray-600',
+        white: 'bg-gray-200/70 border-gray-400 text-black',
+    };
+    const titleColorClasses: Record<TeamColor, string> = {
+        red: 'bg-red-600',
+        blue: 'bg-blue-600',
+        black: 'bg-gray-600',
+        white: 'bg-gray-400 text-black',
+    };
+
+    if (players.length === 0) return null;
+
+    return (
+        <div className={`rounded-lg overflow-hidden border-2 ${teamColorClasses[teamColor]}`}>
+            <h3 className={`text-center font-bold p-2 ${titleColorClasses[teamColor]}`}>{title}</h3>
+            <ul className="p-2 space-y-1">
+                {players.map(p => <li key={p.id} className="font-semibold truncate">{p.name}</li>)}
+            </ul>
+        </div>
+    );
+};
 
 
-const SoccerField: React.FC<SoccerFieldProps> = ({ players, updatePlayerPosition, updatePlayerName, onReset }) => {
+const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, updatePlayerPosition, updatePlayerName, onReset }) => {
   const fieldRef = useRef<HTMLDivElement>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
   const [activePlayerId, setActivePlayerId] = useState<number | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  
+  const team1 = players.find(p => p.y > 50);
+  const team2 = players.find(p => p.y <= 50);
+  const team1Color = team1?.teamId || 'blue';
+  const team2Color = team2?.teamId || 'red';
+
+  const team1Bench = benchPlayers.filter(p => p.teamId === team1Color);
+  const team2Bench = benchPlayers.filter(p => p.teamId === team2Color);
+
 
   const handleMouseMove = useCallback((event: MouseEvent | TouchEvent) => {
     if (activePlayerId === null || !fieldRef.current) return;
@@ -107,8 +122,8 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, updatePlayerPosition
   };
   
   const handleExportImage = async () => {
-    const fieldElement = fieldRef.current;
-    if (!fieldElement || isExporting) return;
+    const exportElement = exportRef.current;
+    if (!exportElement || isExporting) return;
     
     setIsExporting(true);
     
@@ -117,20 +132,12 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, updatePlayerPosition
         activeElement.blur();
     }
     
-    const originalAspectRatio = fieldElement.style.aspectRatio;
-    const originalClasses = fieldElement.className;
-    
-    // Temporarily force vertical aspect ratio for export
-    fieldElement.className = originalClasses.replace(/lg:aspect-\[.*?\]/g, ''); // remove horizontal aspect ratio class
-    fieldElement.style.aspectRatio = '4 / 5';
-
-
     await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
-        const canvas = await html2canvas(fieldElement, {
-            backgroundColor: '#059669',
-            scale: 3, 
+        const canvas = await html2canvas(exportElement, {
+            backgroundColor: '#111827', // bg-gray-900
+            scale: 2, 
             logging: false,
             useCORS: true,
         });
@@ -145,38 +152,39 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, updatePlayerPosition
         console.error('Error exporting image:', error);
         alert('Hubo un error al exportar la imagen. Por favor, inténtalo de nuevo.');
     } finally {
-        fieldElement.style.aspectRatio = originalAspectRatio;
-        fieldElement.className = originalClasses;
         setIsExporting(false);
     }
   };
 
   return (
-    <div className="w-full flex flex-col lg:flex-row items-center lg:items-start lg:justify-center gap-8 animate-fade-in">
-        <div 
-            ref={fieldRef}
-            className="relative w-full max-w-[400px] lg:max-w-3xl bg-green-700 rounded-lg shadow-2xl border-4 border-gray-600 overflow-hidden aspect-[9/16] lg:aspect-[3/2]"
-        >
-            <div className="block lg:hidden">
-              <VerticalFieldLinesSVG />
+    <div className="w-full flex flex-col items-center justify-center gap-8 animate-fade-in">
+        <div ref={exportRef} className="w-full max-w-lg lg:max-w-xl flex items-center justify-center p-4 gap-4 bg-gray-900">
+            <div 
+                ref={fieldRef}
+                className="relative w-full max-w-[400px] bg-green-700 rounded-lg shadow-2xl border-4 border-gray-600 overflow-hidden aspect-[9/16] flex-shrink-0"
+            >
+                <VerticalFieldLinesSVG />
+                {players.map(player => (
+                    <PlayerMarker
+                        key={player.id}
+                        player={player}
+                        onMouseDown={handleMouseDown}
+                        isDragging={activePlayerId === player.id}
+                        onUpdateName={updatePlayerName}
+                    />
+                ))}
             </div>
-            <div className="hidden lg:block">
-              <HorizontalFieldLinesSVG />
-            </div>
-            {players.map(player => (
-                <PlayerMarker
-                    key={player.id}
-                    player={player}
-                    onMouseDown={handleMouseDown}
-                    isDragging={activePlayerId === player.id}
-                    onUpdateName={updatePlayerName}
-                />
-            ))}
+             {(team1Bench.length > 0 || team2Bench.length > 0) && (
+                <div className="w-40 flex-shrink-0 h-full flex flex-col justify-between self-stretch py-8 space-y-4">
+                     <BenchList title="Banca" players={team2Bench} teamColor={team2Color} />
+                     <BenchList title="Banca" players={team1Bench} teamColor={team1Color} />
+                </div>
+             )}
         </div>
-        <div className="w-full lg:w-auto flex flex-col sm:flex-row lg:flex-col items-center gap-4">
+        <div className="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-4 max-w-lg lg:max-w-xl">
             <button 
                 onClick={onReset}
-                className="w-full sm:w-auto lg:w-full bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2"
+                className="w-full sm:flex-1 bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.898 2.162l-1.5-1.5a1 1 0 111.415-1.414l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.415-1.414l1.5-1.5A5.002 5.002 0 005 9V11a1 1 0 11-2 0V3a1 1 0 011-1z" clipRule="evenodd" />
@@ -186,7 +194,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, updatePlayerPosition
             <button 
                 onClick={handleExportImage}
                 disabled={isExporting}
-                className="w-full sm:w-auto lg:w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2 disabled:bg-gray-500 disabled:cursor-wait"
+                className="w-full sm:flex-1 bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2 disabled:bg-gray-500 disabled:cursor-wait"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" />

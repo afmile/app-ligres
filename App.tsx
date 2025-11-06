@@ -1,16 +1,17 @@
-
 import React, { useState } from 'react';
-import { Player, TeamSetup } from './types';
+import { Player, TeamSetup, BenchPlayer } from './types';
 import PlayerSetup from './components/PlayerSetup';
 import SoccerField from './components/SoccerField';
 import { DEFAULT_LAYOUT_6_PLAYERS, DEFAULT_LAYOUT_7_PLAYERS } from './constants';
 
 function App() {
   const [players, setPlayers] = useState<Player[]>([]);
+  const [benchPlayers, setBenchPlayers] = useState<BenchPlayer[]>([]);
   const [showField, setShowField] = useState(false);
 
   const handleSetupComplete = (team1: TeamSetup, team2: TeamSetup) => {
     const newPlayers: Player[] = [];
+    const newBenchPlayers: BenchPlayer[] = [];
     let idCounter = 0;
 
     // Create players for Team 1 (Bottom half of the field)
@@ -27,6 +28,17 @@ function App() {
       });
     });
 
+    // Create bench for Team 1
+    team1.bench.forEach(name => {
+        if(name.trim()) {
+            newBenchPlayers.push({
+                id: idCounter++,
+                name,
+                teamId: team1.color,
+            });
+        }
+    });
+
     // Create players for Team 2 (Top half of the field)
     const layout2 = team2.size === 6 ? DEFAULT_LAYOUT_6_PLAYERS : DEFAULT_LAYOUT_7_PLAYERS;
     layout2.forEach(posLayout => {
@@ -41,8 +53,20 @@ function App() {
         teamId: team2.color,
       });
     });
+    
+    // Create bench for Team 2
+    team2.bench.forEach(name => {
+        if(name.trim()) {
+            newBenchPlayers.push({
+                id: idCounter++,
+                name,
+                teamId: team2.color,
+            });
+        }
+    });
 
     setPlayers(newPlayers);
+    setBenchPlayers(newBenchPlayers);
     setShowField(true);
   };
 
@@ -61,19 +85,21 @@ function App() {
   const handleReset = () => {
     setShowField(false);
     setPlayers([]);
+    setBenchPlayers([]);
   }
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center p-4 sm:p-6 md:p-8">
       <header className="w-full max-w-7xl text-center mb-6">
         <h1 className="text-4xl sm:text-5xl font-bold text-green-400">Organizador Táctico Ligres</h1>
-        <p className="text-gray-400 mt-2">Define tus alineaciones arrastrando a los jugadores y editando los nombres en tiempo real.</p>
+        <p className="text-gray-400 mt-2">Define tus alineaciones, gestiona tu banca y exporta tu estrategia.</p>
       </header>
 
       <main className="w-full max-w-7xl flex-grow">
         {showField ? (
           <SoccerField 
-            players={players} 
+            players={players}
+            benchPlayers={benchPlayers}
             updatePlayerPosition={updatePlayerPosition} 
             updatePlayerName={updatePlayerName}
             onReset={handleReset} 

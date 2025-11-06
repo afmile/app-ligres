@@ -19,6 +19,12 @@ export interface Player {
   teamId: TeamColor;
 }
 
+export interface BenchPlayer {
+    id: number;
+    name: string;
+    teamId: TeamColor;
+}
+
 export interface PositionLayout {
   position: PositionName;
   coordinates: { x: number; y: number };
@@ -28,4 +34,5 @@ export interface TeamSetup {
     color: TeamColor;
     size: 6 | 7;
     playerNames: Record<string, string>;
+    bench: string[];
 }
