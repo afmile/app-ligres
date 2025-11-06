@@ -1,7 +1,5 @@
 # ⚽ App Ligres
 
-
-
 Una app moderna para crear **alineaciones de fútbol 6v6 y 7v7** de forma visual, rápida e intuitiva.  
 Diseñada para equipos amateur, ligas locales y grupos de amigos apasionados por el fútbol.
 
@@ -43,10 +41,9 @@ El stack de **App Ligres** está diseñado para ofrecer **rendimiento, escalabil
 - Node.js (versión ≥ 18)  
 - npm o pnpm
 
-### 🔧 Pasos:
+### 🔧 Pasos
 
-1. Clona el repositorio:
+1. **Clona el repositorio**
    ```bash
    git clone https://github.com/tu_usuario/app-ligres.git
    cd app-ligres
-
