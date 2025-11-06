@@ -1,20 +1,51 @@
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+  <img width="1000" alt="App Ligres Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+  <h1>⚽ App Ligres</h1>
+  <p>
+    Crea alineaciones de fútbol <b>6v6 y 7v7</b> de forma rápida, visual e intuitiva.<br>
+    Diseñada para equipos amateur, ligas locales o grupos de amigos que juegan todas las semanas.
+  </p>
 </div>
 
-# Run and deploy your AI Studio app
+---
 
-This contains everything you need to run your app locally.
+## 🧠 Descripción
 
-View your app in AI Studio: https://ai.studio/apps/drive/1M_XNpuIi-OUEZakydhJKoTHkEClj7p64
+**App Ligres** es una aplicación web construida con **Node.js** que permite crear y visualizar alineaciones de fútbol desde una vista superior.  
+Ideal para planificar estrategias, compartir formaciones por WhatsApp o redes sociales, y organizar los equipos con estilo.
 
-## Run Locally
+---
 
-**Prerequisites:**  Node.js
+## 🚀 Características principales
 
+- ⚽ Soporte para equipos de **6v6** y **7v7**  
+- 🎨 Interfaz moderna y responsive  
+- 🧍‍♂️ Personalización de nombres y colores de jugadores  
+- 🧩 Vista táctica tipo “esquema desde arriba”  
+- 📸 Exportación de alineaciones como imagen  
+- 💾 (Próximamente) Guardado local y modo compartir  
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+---
+
+## 🧩 Tecnologías utilizadas
+
+- **Backend:** Node.js + Express  
+- **Frontend:** HTML, CSS, JavaScript (EJS o React, según implementación)  
+- **Gestión de dependencias:** npm  
+- **Entorno:** `.env.local` para variables de entorno  
+- **Despliegue:** Vercel / Render / Railway  
+
+---
+
+## 🛠️ Ejecución local
+
+**Requisitos previos:**  
+- Node.js (versión ≥ 18)  
+- npm (instalado junto con Node)
+
+### 🔧 Pasos para ejecutar:
+
+1. Clonar el repositorio:
+   ```bash
+   git clone https://github.com/tu_usuario/app-ligres.git
+   cd app-ligres
