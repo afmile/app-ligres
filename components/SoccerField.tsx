@@ -34,7 +34,7 @@ const VerticalFieldLinesSVG = () => (
     </svg>
 );
 
-const BenchList: React.FC<{ title: string; players: BenchPlayer[], teamColor: TeamColor }> = ({ title, players, teamColor }) => {
+const BenchList: React.FC<{ title: string; players: BenchPlayer[], teamColor: TeamColor, className?: string }> = ({ title, players, teamColor, className = '' }) => {
     const teamColorClasses: Record<TeamColor, string> = {
         red: 'bg-red-800/70 border-red-600',
         blue: 'bg-blue-800/70 border-blue-600',
@@ -51,10 +51,10 @@ const BenchList: React.FC<{ title: string; players: BenchPlayer[], teamColor: Te
     if (players.length === 0) return null;
 
     return (
-        <div className={`rounded-lg overflow-hidden border-2 ${teamColorClasses[teamColor]}`}>
-            <h3 className={`text-center font-bold p-2 ${titleColorClasses[teamColor]}`}>{title}</h3>
+        <div className={`rounded-lg overflow-hidden border-2 ${teamColorClasses[teamColor]} ${className}`}>
+            <h3 className={`text-center font-bold p-2 text-sm`}>{title}</h3>
             <ul className="p-2 space-y-1">
-                {players.map(p => <li key={p.id} className="font-semibold truncate">{p.name}</li>)}
+                {players.map(p => <li key={p.id} className="font-semibold truncate text-sm">{p.name}</li>)}
             </ul>
         </div>
     );
@@ -121,67 +121,96 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
     setActivePlayerId(id);
   };
   
-  const handleExportImage = async () => {
+  const handleShareImage = async () => {
     const exportElement = exportRef.current;
     if (!exportElement || isExporting) return;
     
     setIsExporting(true);
     
     const activeElement = document.activeElement as HTMLElement;
-    if (activeElement?.blur) {
-        activeElement.blur();
-    }
+    if (activeElement?.blur) activeElement.blur();
     
     await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
         const canvas = await html2canvas(exportElement, {
-            backgroundColor: '#111827', // bg-gray-900
-            scale: 2, 
+            backgroundColor: '#111827',
+            scale: 2,
             logging: false,
             useCORS: true,
         });
-        const image = canvas.toDataURL('image/png', 1.0);
-        const link = document.createElement('a');
-        link.href = image;
-        link.download = 'alineacion-tactica.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+
+        if (navigator.share && navigator.canShare) {
+             canvas.toBlob(async (blob) => {
+                if (blob) {
+                    const file = new File([blob], 'alineacion-tactica.png', { type: 'image/png' });
+                    try {
+                        await navigator.share({
+                            title: 'Alineación Táctica',
+                            text: 'Así salimos a la cancha.',
+                            files: [file],
+                        });
+                    } catch (error) {
+                       if((error as Error).name !== 'AbortError') {
+                         console.error('Error sharing:', error);
+                       }
+                    }
+                }
+            }, 'image/png');
+        } else {
+            const image = canvas.toDataURL('image/png', 1.0);
+            const link = document.createElement('a');
+            link.href = image;
+            link.download = 'alineacion-tactica.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     } catch (error) {
         console.error('Error exporting image:', error);
-        alert('Hubo un error al exportar la imagen. Por favor, inténtalo de nuevo.');
+        alert('Hubo un error al generar la imagen. Por favor, inténtalo de nuevo.');
     } finally {
         setIsExporting(false);
     }
   };
 
+  const hasBenches = team1Bench.length > 0 || team2Bench.length > 0;
+
   return (
-    <div className="w-full flex flex-col items-center justify-center gap-8 animate-fade-in">
-        <div ref={exportRef} className="w-full max-w-lg lg:max-w-xl flex items-center justify-center p-4 gap-4 bg-gray-900">
-            <div 
-                ref={fieldRef}
-                className="relative w-full max-w-[400px] bg-green-700 rounded-lg shadow-2xl border-4 border-gray-600 overflow-hidden aspect-[9/16] flex-shrink-0"
-            >
-                <VerticalFieldLinesSVG />
-                {players.map(player => (
-                    <PlayerMarker
-                        key={player.id}
-                        player={player}
-                        onMouseDown={handleMouseDown}
-                        isDragging={activePlayerId === player.id}
-                        onUpdateName={updatePlayerName}
-                    />
-                ))}
+    <div className="w-full flex flex-col items-center justify-center gap-6 animate-fade-in">
+        <div ref={exportRef} className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-2xl bg-gray-900 p-2 lg:p-4">
+            <div className="flex flex-col lg:flex-row items-center lg:items-stretch justify-center gap-4">
+                 {hasBenches && (
+                    <div className="hidden lg:flex flex-col justify-between self-stretch w-40 flex-shrink-0 space-y-4">
+                         <BenchList title={`Banca (${team2Color})`} players={team2Bench} teamColor={team2Color} className="flex-grow flex flex-col" />
+                         <div className="h-2"></div> {/* Spacer */}
+                         <BenchList title={`Banca (${team1Color})`} players={team1Bench} teamColor={team1Color} className="flex-grow flex flex-col" />
+                    </div>
+                 )}
+                <div 
+                    ref={fieldRef}
+                    className="relative w-full bg-green-700 rounded-lg shadow-2xl border-4 border-gray-600 overflow-hidden aspect-[1/2]"
+                >
+                    <VerticalFieldLinesSVG />
+                    {players.map(player => (
+                        <PlayerMarker
+                            key={player.id}
+                            player={player}
+                            onMouseDown={handleMouseDown}
+                            isDragging={activePlayerId === player.id}
+                            onUpdateName={updatePlayerName}
+                        />
+                    ))}
+                </div>
             </div>
-             {(team1Bench.length > 0 || team2Bench.length > 0) && (
-                <div className="w-40 flex-shrink-0 h-full flex flex-col justify-between self-stretch py-8 space-y-4">
-                     <BenchList title="Banca" players={team2Bench} teamColor={team2Color} />
-                     <BenchList title="Banca" players={team1Bench} teamColor={team1Color} />
+             {hasBenches && (
+                <div className="w-full flex lg:hidden items-center justify-center gap-4 mt-4">
+                     <BenchList title={`Banca (${team2Color})`} players={team2Bench} teamColor={team2Color} className="flex-1" />
+                     <BenchList title={`Banca (${team1Color})`} players={team1Bench} teamColor={team1Color} className="flex-1" />
                 </div>
              )}
         </div>
-        <div className="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-4 max-w-lg lg:max-w-xl">
+        <div className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-2xl flex flex-col sm:flex-row items-center gap-4">
             <button 
                 onClick={onReset}
                 className="w-full sm:flex-1 bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2"
@@ -192,14 +221,14 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
                 <span>Empezar de Nuevo</span>
             </button>
             <button 
-                onClick={handleExportImage}
+                onClick={handleShareImage}
                 disabled={isExporting}
                 className="w-full sm:flex-1 bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2 disabled:bg-gray-500 disabled:cursor-wait"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" />
+                    <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
                 </svg>
-                <span>{isExporting ? 'Exportando...' : 'Exportar Imagen'}</span>
+                <span>{isExporting ? 'Generando...' : 'Compartir Imagen'}</span>
             </button>
         </div>
     </div>

@@ -21,20 +21,20 @@ export const POSITIONS_7_PLAYERS: PositionName[] = [
 ];
 
 export const DEFAULT_LAYOUT_6_PLAYERS: PositionLayout[] = [
-  { position: 'Portero', coordinates: { x: 50, y: 92 } },
-  { position: 'Defensa Central', coordinates: { x: 50, y: 72 } },
-  { position: 'Lateral Izquierdo', coordinates: { x: 25, y: 58 } },
-  { position: 'Lateral Derecho', coordinates: { x: 75, y: 58 } },
-  { position: 'Mediocampista', coordinates: { x: 50, y: 40 } },
-  { position: 'Delantero', coordinates: { x: 50, y: 18 } },
+  { position: 'Portero', coordinates: { x: 50, y: 90 } },
+  { position: 'Defensa Central', coordinates: { x: 50, y: 70 } },
+  { position: 'Lateral Izquierdo', coordinates: { x: 25, y: 55 } },
+  { position: 'Lateral Derecho', coordinates: { x: 75, y: 55 } },
+  { position: 'Mediocampista', coordinates: { x: 50, y: 35 } },
+  { position: 'Delantero', coordinates: { x: 50, y: 15 } },
 ];
 
 export const DEFAULT_LAYOUT_7_PLAYERS: PositionLayout[] = [
-  { position: 'Portero', coordinates: { x: 50, y: 92 } },
+  { position: 'Portero', coordinates: { x: 50, y: 90 } },
   { position: 'Defensa Central', coordinates: { x: 50, y: 70 } },
   { position: 'Lateral Izquierdo', coordinates: { x: 20, y: 60 } },
   { position: 'Lateral Derecho', coordinates: { x: 80, y: 60 } },
-  { position: 'Mediocampista 1', coordinates: { x: 35, y: 42 } },
-  { position: 'Mediocampista 2', coordinates: { x: 65, y: 42 } },
-  { position: 'Delantero', coordinates: { x: 50, y: 20 } },
+  { position: 'Mediocampista 1', coordinates: { x: 35, y: 40 } },
+  { position: 'Mediocampista 2', coordinates: { x: 65, y: 40 } },
+  { position: 'Delantero', coordinates: { x: 50, y: 15 } },
 ];

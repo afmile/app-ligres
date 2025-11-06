@@ -119,7 +119,7 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, onMouseDown, isDrag
             teamId={player.teamId}
             className="w-16 h-16"
         />
-        <div className="w-full text-center -mt-1">
+        <div className="w-full text-center -mt-2">
           {isEditing ? (
             <input
               ref={inputRef}
