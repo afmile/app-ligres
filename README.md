@@ -1,5 +1,4 @@
 <div align="center">
-  <img width="1000" alt="App Ligres Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
   <h1>⚽ App Ligres</h1>
   <p>
     Crea alineaciones de fútbol <b>6v6 y 7v7</b> de forma rápida, visual e intuitiva.<br>
