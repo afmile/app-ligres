@@ -1,10 +1,9 @@
-<div align="center">
-   <h1>⚽ App Ligres</h1>
-  <p>
-    Una app moderna para crear <b>alineaciones de fútbol 6v6 y 7v7</b> de forma visual, rápida e intuitiva.<br>
-    Diseñada para equipos amateur, ligas locales y grupos de amigos apasionados por el fútbol.
-  </p>
-</div>
+# ⚽ App Ligres
+
+
+
+Una app moderna para crear **alineaciones de fútbol 6v6 y 7v7** de forma visual, rápida e intuitiva.  
+Diseñada para equipos amateur, ligas locales y grupos de amigos apasionados por el fútbol.
 
 ---
 
@@ -19,12 +18,12 @@ Podrás organizar tus equipos, definir estrategias y compartir las formaciones c
 
 ## 🚀 Características principales
 
-- 🧩 Crea equipos de **6v6 o 7v7**
-- 🎨 Personaliza los nombres, colores y posiciones
-- 📱 Interfaz moderna y adaptable a cualquier dispositivo
-- 📸 Exporta tu alineación como **imagen PNG** con un clic
-- 🧠 Sin necesidad de registro ni configuraciones complejas
-- ⚙️ Desarrollada con un stack moderno, rápido y escalable
+- 🧩 Crea equipos de **6v6 o 7v7**  
+- 🎨 Personaliza los nombres, colores y posiciones  
+- 📱 Interfaz moderna y adaptable a cualquier dispositivo  
+- 📸 Exporta tu alineación como **imagen PNG** con un clic  
+- 🧠 Sin necesidad de registro ni configuraciones complejas  
+- ⚙️ Desarrollada con un stack moderno, rápido y escalable  
 
 ---
 
@@ -50,3 +49,4 @@ El stack de **App Ligres** está diseñado para ofrecer **rendimiento, escalabil
    ```bash
    git clone https://github.com/tu_usuario/app-ligres.git
    cd app-ligres
+
