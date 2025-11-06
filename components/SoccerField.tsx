@@ -11,63 +11,47 @@ interface SoccerFieldProps {
   onReset: () => void;
 }
 
-const FieldLinesSVG = () => (
+const VerticalFieldLinesSVG = () => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 840 1050"
+      viewBox="0 0 500 800"
       className="absolute inset-0 w-full h-full"
       preserveAspectRatio="none"
     >
-      {/* Field Border */}
-      <rect x="2" y="2" width="836" height="1046" stroke="#a3a3a3" strokeOpacity="0.6" strokeWidth="4" fill="none" />
-      
-      {/* Halfway line & Center circle */}
-      <path
-        d="M0 525 h840 M420 525 m-73 0 a73 73 0 1 0 146 0 a73 73 0 1 0 -146 0"
-        stroke="#a3a3a3"
-        strokeOpacity="0.6"
-        strokeWidth="4"
-        fill="none"
-      />
-      <circle cx="420" cy="525" r="5" fill="#a3a3a3" fillOpacity="0.6" />
+      <defs>
+        <style>{`.line{stroke:#a3a3a3;stroke-opacity:0.6;stroke-width:3;fill:none;}`}</style>
+      </defs>
+      <rect x="1.5" y="1.5" width="497" height="797" className="line" />
+      <path d="M0 400 H500 M250 400 m-70 0 a70 70 0 1 0 140 0 a70 70 0 1 0 -140 0" className="line" />
+      <circle cx="250" cy="400" r="4" fill="#a3a3a3" fillOpacity="0.6" />
+      <path d="M90 0 V130 H410 V0 M90 800 V670 H410 V800" className="line" />
+      <path d="M180 0 V45 H320 V0 M180 800 V755 H320 V800" className="line" />
+      <circle cx="250" cy="90" r="3" fill="#a3a3a3" fillOpacity="0.6" />
+      <circle cx="250" cy="710" r="3" fill="#a3a3a3" fillOpacity="0.6" />
+      <path d="M180 130 A 70 60 0 0 0 320 130" className="line" />
+      <path d="M180 670 A 70 60 0 0 1 320 670" className="line" />
+    </svg>
+);
 
-      {/* Penalty Areas */}
-      <path
-        d="M168 0 V165 H672 V0 M168 1050 V885 H672 V1050"
-        stroke="#a3a3a3"
-        strokeOpacity="0.6"
-        strokeWidth="4"
-        fill="none"
-      />
-
-      {/* Goal Areas */}
-      <path
-        d="M306 0 V55 H534 V0 M306 1050 V995 H534 V1050"
-        stroke="#a3a3a3"
-        strokeOpacity="0.6"
-        strokeWidth="4"
-        fill="none"
-      />
-
-      {/* Penalty Spots */}
-      <circle cx="420" cy="110" r="4" fill="#a3a3a3" fillOpacity="0.6" />
-      <circle cx="420" cy="940" r="4" fill="#a3a3a3" fillOpacity="0.6" />
-
-      {/* Penalty Arcs */}
-      <path
-        d="M325 165 A 95 95 0 0 0 515 165"
-        stroke="#a3a3a3"
-        strokeOpacity="0.6"
-        strokeWidth="4"
-        fill="none"
-      />
-      <path
-        d="M325 885 A 95 95 0 0 1 515 885"
-        stroke="#a3a3a3"
-        strokeOpacity="0.6"
-        strokeWidth="4"
-        fill="none"
-      />
+const HorizontalFieldLinesSVG = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 800 500"
+      className="absolute inset-0 w-full h-full"
+      preserveAspectRatio="none"
+    >
+      <defs>
+        <style>{`.line{stroke:#a3a3a3;stroke-opacity:0.6;stroke-width:3;fill:none;}`}</style>
+      </defs>
+      <rect x="1.5" y="1.5" width="797" height="497" className="line" />
+      <path d="M400 0 V500 M400 250 m0 -70 a70 70 0 1 0 0 140 a70 70 0 1 0 0 -140" className="line" />
+      <circle cx="400" cy="250" r="4" fill="#a3a3a3" fillOpacity="0.6" />
+      <path d="M0 90 H130 V410 H0 M800 90 H670 V410 H800" className="line" />
+      <path d="M0 180 H45 V320 H0 M800 180 H755 V320 H800" className="line" />
+      <circle cx="90" cy="250" r="3" fill="#a3a3a3" fillOpacity="0.6" />
+      <circle cx="710" cy="250" r="3" fill="#a3a3a3" fillOpacity="0.6" />
+      <path d="M130 180 A 60 70 0 0 0 130 320" className="line" />
+      <path d="M670 180 A 60 70 0 0 1 670 320" className="line" />
     </svg>
 );
 
@@ -87,7 +71,6 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, updatePlayerPosition
     const x = ((clientX - fieldRect.left) / fieldRect.width) * 100;
     const y = ((clientY - fieldRect.top) / fieldRect.height) * 100;
 
-    // Constrain player within field boundaries
     const constrainedX = Math.max(0, Math.min(100, x));
     const constrainedY = Math.max(0, Math.min(100, y));
 
@@ -124,7 +107,8 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, updatePlayerPosition
   };
   
   const handleExportImage = async () => {
-    if (!fieldRef.current || isExporting) return;
+    const fieldElement = fieldRef.current;
+    if (!fieldElement || isExporting) return;
     
     setIsExporting(true);
     
@@ -132,10 +116,20 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, updatePlayerPosition
     if (activeElement?.blur) {
         activeElement.blur();
     }
+    
+    const originalAspectRatio = fieldElement.style.aspectRatio;
+    const originalClasses = fieldElement.className;
+    
+    // Temporarily force vertical aspect ratio for export
+    fieldElement.className = originalClasses.replace(/lg:aspect-\[.*?\]/g, ''); // remove horizontal aspect ratio class
+    fieldElement.style.aspectRatio = '4 / 5';
+
+
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
-        const canvas = await html2canvas(fieldRef.current, {
-            backgroundColor: '#059669', // A slightly brighter green for the export
+        const canvas = await html2canvas(fieldElement, {
+            backgroundColor: '#059669',
             scale: 3, 
             logging: false,
             useCORS: true,
@@ -151,17 +145,24 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, updatePlayerPosition
         console.error('Error exporting image:', error);
         alert('Hubo un error al exportar la imagen. Por favor, inténtalo de nuevo.');
     } finally {
+        fieldElement.style.aspectRatio = originalAspectRatio;
+        fieldElement.className = originalClasses;
         setIsExporting(false);
     }
   };
 
   return (
-    <div className="w-full flex flex-col items-center animate-fade-in">
+    <div className="w-full flex flex-col lg:flex-row items-center lg:items-start lg:justify-center gap-8 animate-fade-in">
         <div 
             ref={fieldRef}
-            className="relative w-full aspect-[4/5] max-w-[500px] lg:max-w-[600px] bg-green-700 rounded-lg shadow-2xl border-4 border-gray-600 overflow-hidden"
+            className="relative w-full max-w-[400px] lg:max-w-3xl bg-green-700 rounded-lg shadow-2xl border-4 border-gray-600 overflow-hidden aspect-[9/16] lg:aspect-[3/2]"
         >
-            <FieldLinesSVG />
+            <div className="block lg:hidden">
+              <VerticalFieldLinesSVG />
+            </div>
+            <div className="hidden lg:block">
+              <HorizontalFieldLinesSVG />
+            </div>
             {players.map(player => (
                 <PlayerMarker
                     key={player.id}
@@ -172,10 +173,10 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, updatePlayerPosition
                 />
             ))}
         </div>
-        <div className="mt-6 flex flex-col sm:flex-row items-center gap-4">
+        <div className="w-full lg:w-auto flex flex-col sm:flex-row lg:flex-col items-center gap-4">
             <button 
                 onClick={onReset}
-                className="w-full sm:w-auto bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2"
+                className="w-full sm:w-auto lg:w-full bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.898 2.162l-1.5-1.5a1 1 0 111.415-1.414l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.415-1.414l1.5-1.5A5.002 5.002 0 005 9V11a1 1 0 11-2 0V3a1 1 0 011-1z" clipRule="evenodd" />
@@ -185,7 +186,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, updatePlayerPosition
             <button 
                 onClick={handleExportImage}
                 disabled={isExporting}
-                className="w-full sm:w-auto bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2 disabled:bg-gray-500 disabled:cursor-wait"
+                className="w-full sm:w-auto lg:w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2 disabled:bg-gray-500 disabled:cursor-wait"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" />
