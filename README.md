@@ -34,16 +34,4 @@ El stack de **App Ligres** está diseñado para ofrecer **rendimiento, escalabil
 - 🖼️ **html2canvas:** Para capturar el campo y exportar la alineación como imagen PNG  
 
 ---
-
-## 🛠️ Ejecución local
-
-**Requisitos previos:**  
-- Node.js (versión ≥ 18)  
-- npm o pnpm
-
-### 🔧 Pasos
-
-1. **Clona el repositorio**
-   ```bash
-   git clone https://github.com/tu_usuario/app-ligres.git
-   cd app-ligres
+   
