@@ -1,5 +1,5 @@
 {
   "name": "Soccer Lineup Tool",
-  "description": "An application to arrange soccer players on a tactical field. Users can select team size, assign players to positions, see them automatically placed on the field, and then manually adjust their positions via drag-and-drop.",
+  "description": "An application to arrange soccer players on a tactical field. Users can select team size, assign players to positions, see them automatically placed on the field, and then manually adjust their positions via drag-and-drop. Now with match history, location/date tracking, and text export.",
   "requestFramePermissions": []
 }

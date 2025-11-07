@@ -1,12 +1,15 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { POSITIONS_6_PLAYERS, POSITIONS_7_PLAYERS } from '../constants';
-import { PositionName, TeamColor, TeamSetup } from '../types';
+import { PositionName, TeamColor, TeamSetup, Match } from '../types';
 
 interface PlayerSetupProps {
-  onSetupComplete: (team1: TeamSetup, team2: TeamSetup) => void;
+  onSetupComplete: (team1: TeamSetup, team2: TeamSetup, location: string, date: string) => void;
+  history: Match[];
+  onShowHistory: () => void;
 }
 
 const ALL_COLORS: TeamColor[] = ['red', 'blue', 'black', 'white'];
+const DRAFT_STORAGE_KEY = 'soccerLineupDraft';
 
 const TeamForm: React.FC<{
   teamLabel: string;
@@ -146,7 +149,10 @@ const TeamForm: React.FC<{
 };
 
 
-const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete }) => {
+const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onShowHistory }) => {
+  const [location, setLocation] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isMatchInfoLocked, setIsMatchInfoLocked] = useState(false);
   const [team1Color, setTeam1Color] = useState<TeamColor>('blue');
   const [team2Color, setTeam2Color] = useState<TeamColor>('red');
   const [teamSize, setTeamSize] = useState<6 | 7>(7);
@@ -155,33 +161,123 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete }) => {
   const [isBenchEnabled, setIsBenchEnabled] = useState(false);
   const [team1Bench, setTeam1Bench] = useState<string[]>(['', '', '']);
   const [team2Bench, setTeam2Bench] = useState<string[]>(['', '', '']);
+  const [showRecentLocations, setShowRecentLocations] = useState(false);
 
+  // Effect to load draft from localStorage on initial mount
+  useEffect(() => {
+    try {
+        const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
+        if (savedDraft) {
+            const draft = JSON.parse(savedDraft);
+            setLocation(draft.location ?? '');
+            setDate(draft.date ?? new Date().toISOString().split('T')[0]);
+            setIsMatchInfoLocked(draft.isMatchInfoLocked ?? false);
+            setTeam1Color(draft.team1Color ?? 'blue');
+            setTeam2Color(draft.team2Color ?? 'red');
+            setTeamSize(draft.teamSize ?? 7);
+            setTeam1Names(draft.team1Names ?? {});
+            setTeam2Names(draft.team2Names ?? {});
+            setIsBenchEnabled(draft.isBenchEnabled ?? false);
+            setTeam1Bench(draft.team1Bench ?? ['', '', '']);
+            setTeam2Bench(draft.team2Bench ?? ['', '', '']);
+        }
+    } catch (error) {
+        console.error("Failed to load draft from localStorage:", error);
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+    }
+  }, []);
+
+  // Effect to save draft to localStorage whenever a state changes
+  useEffect(() => {
+    const draft = {
+        location,
+        date,
+        isMatchInfoLocked,
+        team1Color,
+        team2Color,
+        teamSize,
+        team1Names,
+        team2Names,
+        isBenchEnabled,
+        team1Bench,
+        team2Bench,
+    };
+    try {
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    } catch (error) {
+        console.error("Failed to save draft to localStorage:", error);
+    }
+  }, [
+      location, date, isMatchInfoLocked, team1Color, team2Color, 
+      teamSize, team1Names, team2Names, isBenchEnabled, team1Bench, team2Bench
+  ]);
 
   const positions = useMemo(() => teamSize === 6 ? POSITIONS_6_PLAYERS : POSITIONS_7_PLAYERS, [teamSize]);
   
-  const isTeam1Valid = useMemo(() => positions.every(pos => team1Names[pos]?.trim() !== ''), [team1Names, positions]);
+  const isMatchInfoValid = useMemo(() => location.trim() !== '' && date.trim() !== '', [location, date]);
+  const isTeam1Valid = useMemo(() => positions.every(pos => (team1Names[pos] || '').trim() !== ''), [team1Names, positions]);
   const areTeamColorsValid = useMemo(() => team1Color !== team2Color, [team1Color, team2Color]);
-  const isTeam2Valid = useMemo(() => positions.every(pos => team2Names[pos]?.trim() !== ''), [team2Names, positions]);
-  const isFormValid = isTeam1Valid && isTeam2Valid && areTeamColorsValid;
+  const isTeam2Valid = useMemo(() => positions.every(pos => (team2Names[pos] || '').trim() !== ''), [team2Names, positions]);
+  const isFormValid = isMatchInfoValid && isTeam1Valid && isTeam2Valid && areTeamColorsValid;
 
-  const colorTranslations: Record<TeamColor, string> = {
-    red: 'Rojo',
-    blue: 'Azul',
-    black: 'Negro',
-    white: 'Blanco'
-  };
-
+  const colorTranslations: Record<TeamColor, string> = { red: 'Rojo', blue: 'Azul', black: 'Negro', white: 'Blanco' };
   const team1Label = `Equipo ${colorTranslations[team1Color]}`;
   const team2Label = `Equipo ${colorTranslations[team2Color]}`;
+  
+  const formattedDate = useMemo(() => {
+    if (!date) return 'Selecciona una fecha';
+    const d = new Date(date + 'T00:00:00'); // Adjust for timezone issues
+    return new Intl.DateTimeFormat('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(d);
+  }, [date]);
 
+  const calendarUrl = useMemo(() => {
+    const eventTitle = `Partido Ligres, ${location}`;
+    const startDate = new Date(date + 'T00:00:00');
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 1);
+
+    const formatDateForUrl = (d: Date) => d.toISOString().split('T')[0].replace(/-/g, '');
+    const formattedStartDate = formatDateForUrl(startDate);
+    const formattedEndDate = formatDateForUrl(endDate);
+
+    const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: eventTitle,
+        dates: `${formattedStartDate}/${formattedEndDate}`,
+        location: location,
+        details: 'Partido de fútbol organizado con Organizador Táctico Ligres.'
+    });
+
+    return `https://www.google.com/calendar/render?${params.toString()}`;
+  }, [date, location]);
+  
+  const recentLocations = useMemo(() => {
+    return Array.from(new Set(history.map(m => m.location))).slice(0, 5);
+  }, [history]);
+
+  const handleLockMatchInfo = () => {
+    if (isMatchInfoValid) {
+        setIsMatchInfoLocked(true);
+    }
+  };
+
+  const handleUnlockMatchInfo = () => {
+    setIsMatchInfoLocked(false);
+  };
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) return;
     
     onSetupComplete(
         { color: team1Color, size: teamSize, playerNames: team1Names, bench: isBenchEnabled ? team1Bench.filter(n => n.trim()) : [] },
-        { color: team2Color, size: teamSize, playerNames: team2Names, bench: isBenchEnabled ? team2Bench.filter(n => n.trim()) : [] }
+        { color: team2Color, size: teamSize, playerNames: team2Names, bench: isBenchEnabled ? team2Bench.filter(n => n.trim()) : [] },
+        location,
+        new Date(date).toISOString()
     );
+
+    // Clear the draft after successful submission
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
   };
   
   const toggleBench = () => {
@@ -194,80 +290,187 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete }) => {
   }
 
   return (
-    <div className="bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl border border-gray-700 animate-fade-in">
-      <form onSubmit={handleSubmit}>
-        <div className="mb-8 space-y-4">
-            <h3 className="text-lg font-semibold text-center">Configuración General</h3>
-             <div className="flex space-x-4">
-              {[6, 7].map(size => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => setTeamSize(size as 6 | 7)}
-                  className={`flex-1 py-3 px-4 rounded-lg font-bold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                    teamSize === size
-                      ? 'bg-green-600 text-white shadow-lg'
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                >
-                  {size} Jugadores
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center justify-center bg-gray-800 p-4 rounded-lg">
-                <label htmlFor="bench-toggle" className="font-semibold mr-4">Activar Banca</label>
-                <button
-                    type="button"
-                    role="switch"
-                    aria-checked={isBenchEnabled}
-                    onClick={toggleBench}
-                    id="bench-toggle"
-                    className={`${isBenchEnabled ? 'bg-green-600' : 'bg-gray-600'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800`}
-                >
-                    <span className={`${isBenchEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}/>
-                </button>
-            </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <TeamForm
-              teamLabel={team1Label}
-              teamColor={team1Color}
-              setTeamColor={setTeam1Color}
-              otherTeamColor={team2Color}
-              playerNames={team1Names}
-              setPlayerNames={setTeam1Names}
-              positions={positions}
-              isBenchEnabled={isBenchEnabled}
-              benchNames={team1Bench}
-              setBenchNames={setTeam1Bench}
-            />
-            <TeamForm
-              teamLabel={team2Label}
-              teamColor={team2Color}
-              setTeamColor={setTeam2Color}
-              otherTeamColor={team1Color}
-              playerNames={team2Names}
-              setPlayerNames={setTeam2Names}
-              positions={positions}
-              isBenchEnabled={isBenchEnabled}
-              benchNames={team2Bench}
-              setBenchNames={setTeam2Bench}
-            />
-        </div>
+    <div className="w-full max-w-4xl mx-auto space-y-8">
+      <div className="bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl border border-gray-700 animate-fade-in">
+        <h3 className="text-xl font-bold text-center mb-4 text-green-400">Lugar y fecha</h3>
         
-        <button
-          type="submit"
-          disabled={!isFormValid}
-          className="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition-colors duration-300 shadow-lg disabled:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center space-x-2"
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002-2h2a2 2 0 002 2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-            </svg>
-            <span>Distribuir Jugadores en la Cancha</span>
-        </button>
-        {!isFormValid && <p className="text-center text-yellow-400 text-sm mt-3">Por favor, completa los datos de ambos equipos y asegúrate de que los colores sean diferentes.</p>}
-      </form>
+        {isMatchInfoLocked ? (
+          <div className="animate-fade-in space-y-4">
+              <div className="p-4 bg-gray-900/50 rounded-lg">
+                  <p className="text-sm font-semibold text-gray-400 text-center">Lugar</p>
+                  <div className="flex items-center justify-center gap-2 mt-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 20l-4.95-5.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                      </svg>
+                      <p className="text-lg font-bold text-white text-center">{location}</p>
+                  </div>
+              </div>
+              <div className="p-4 bg-gray-900/50 rounded-lg">
+                  <p className="text-sm font-semibold text-gray-400 text-center">Fecha</p>
+                  <div className="flex items-center justify-center gap-2 mt-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                      </svg>
+                      <p className="text-lg text-white text-center">{formattedDate}</p>
+                  </div>
+              </div>
+              <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-end">
+                  <button type="button" onClick={handleUnlockMatchInfo} className="bg-yellow-600 hover:bg-yellow-500 text-white font-semibold px-3 py-2 rounded-md text-sm flex items-center justify-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg>
+                      Modificar
+                  </button>
+                   <a
+                        href={calendarUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-3 py-2 rounded-md text-sm flex items-center justify-center gap-2"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                        </svg>
+                        <span className="hidden sm:inline">Añadir al calendario</span>
+                         <span className="sm:hidden">Calendario</span>
+                    </a>
+                  <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(location)}`} target="_blank" rel="noopener noreferrer" className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-3 py-2 rounded-md text-sm flex items-center justify-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                      Cómo llegar
+                  </a>
+              </div>
+          </div>
+        ) : (
+          <div className="animate-fade-in">
+              <div className="space-y-4">
+                <div className="relative">
+                  <div className="flex justify-between items-center mb-1">
+                    <label htmlFor="location" className="block text-sm font-medium text-gray-300">Lugar del Partido</label>
+                    {recentLocations.length > 0 && (
+                      <button type="button" onClick={() => setShowRecentLocations(!showRecentLocations)} className="text-sm text-gray-400 hover:text-white opacity-75 hover:opacity-100 transition-opacity">
+                        Lugares recientes
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    id="location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="Ej: Cancha Los Héroes"
+                    className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    required
+                  />
+                  {showRecentLocations && recentLocations.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg">
+                      <ul className="py-1">
+                        {recentLocations.map(loc => (
+                          <li key={loc} onClick={() => { setLocation(loc); setShowRecentLocations(false); }} className="px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 cursor-pointer">
+                            {loc}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                <div>
+                    <label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-1">Fecha</label>
+                    <input type="date" id="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500" required />
+                    <p className="text-center text-gray-400 mt-2 text-sm">{formattedDate}</p>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-end">
+                  <button 
+                      type="button" 
+                      onClick={handleLockMatchInfo} 
+                      disabled={!isMatchInfoValid}
+                      className="bg-green-600 hover:bg-green-500 text-white font-semibold px-3 py-2 rounded-md text-sm flex items-center justify-center gap-2 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                  >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" /></svg>
+                      Guardar
+                  </button>
+              </div>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl border border-gray-700 animate-fade-in">
+        <form onSubmit={handleSubmit}>
+            <div className="mb-8 space-y-4">
+                <div className={history.length > 0 ? 'flex justify-between items-center' : ''}>
+                    <h3 className={`text-lg font-semibold ${history.length === 0 ? 'text-center' : ''}`}>Configurar Plantilla</h3>
+                    {history.length > 0 && (
+                        <button type="button" onClick={onShowHistory} className="bg-gray-700/50 hover:bg-gray-600/50 text-white text-sm font-semibold py-1 px-3 rounded-lg transition-colors opacity-75 hover:opacity-100">
+                            Historial
+                        </button>
+                    )}
+                </div>
+                <div className="flex space-x-4">
+                {[6, 7].map(size => (
+                    <button
+                    key={size}
+                    type="button"
+                    onClick={() => setTeamSize(size as 6 | 7)}
+                    className={`flex-1 py-3 px-4 rounded-lg font-bold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                        teamSize === size ? 'bg-green-600 text-white shadow-lg' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                    >
+                    {size} Jugadores
+                    </button>
+                ))}
+                </div>
+                <div className="flex items-center justify-center bg-gray-800 p-4 rounded-lg">
+                    <label htmlFor="bench-toggle" className="font-semibold mr-4">Activar Banca</label>
+                    <button
+                        type="button"
+                        role="switch"
+                        aria-checked={isBenchEnabled}
+                        onClick={toggleBench}
+                        id="bench-toggle"
+                        className={`${isBenchEnabled ? 'bg-green-600' : 'bg-gray-600'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800`}
+                    >
+                        <span className={`${isBenchEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}/>
+                    </button>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <TeamForm
+                teamLabel={team1Label}
+                teamColor={team1Color}
+                setTeamColor={setTeam1Color}
+                otherTeamColor={team2Color}
+                playerNames={team1Names}
+                setPlayerNames={setTeam1Names}
+                positions={positions}
+                isBenchEnabled={isBenchEnabled}
+                benchNames={team1Bench}
+                setBenchNames={setTeam1Bench}
+                />
+                <TeamForm
+                teamLabel={team2Label}
+                teamColor={team2Color}
+                setTeamColor={setTeam2Color}
+                otherTeamColor={team1Color}
+                playerNames={team2Names}
+                setPlayerNames={setTeam2Names}
+                positions={positions}
+                isBenchEnabled={isBenchEnabled}
+                benchNames={team2Bench}
+                setBenchNames={setTeam2Bench}
+                />
+            </div>
+            
+            <button
+            type="submit"
+            disabled={!isFormValid}
+            className="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition-colors duration-300 shadow-lg disabled:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center space-x-2"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002-2h2a2 2 0 002 2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <span>Distribuir jugadores en Cancha</span>
+            </button>
+            {!isFormValid && <p className="text-center text-yellow-400 text-sm mt-3">Por favor, completa los datos del partido y de ambos equipos.</p>}
+        </form>
+      </div>
     </div>
   );
 };

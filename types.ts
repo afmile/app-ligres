@@ -36,3 +36,11 @@ export interface TeamSetup {
     playerNames: Record<string, string>;
     bench: string[];
 }
+
+export interface Match {
+  id: string;
+  location: string;
+  date: string; // Stored as ISO string
+  team1Setup: TeamSetup;
+  team2Setup: TeamSetup;
+}

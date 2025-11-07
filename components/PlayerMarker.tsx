@@ -92,7 +92,7 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, onMouseDown, isDrag
 
   return (
     <div
-      className={`absolute w-20 h-24 -translate-x-1/2 -translate-y-1/2 select-none group transition-transform duration-150 ${
+      className={`absolute w-14 h-16 -translate-x-1/2 -translate-y-1/2 select-none group transition-transform duration-150 ${
         isDragging ? 'cursor-grabbing scale-110 z-10' : 'cursor-grab'
       }`}
       style={{
@@ -117,9 +117,9 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, onMouseDown, isDrag
         <JerseyIcon 
             color={jerseyColor}
             teamId={player.teamId}
-            className="w-16 h-16"
+            className="w-11 h-11"
         />
-        <div className="w-full text-center -mt-2">
+        <div className="w-full text-center -mt-1">
           {isEditing ? (
             <input
               ref={inputRef}
@@ -129,12 +129,12 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, onMouseDown, isDrag
               onBlur={handleNameChangeCommit}
               onKeyDown={handleKeyDown}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-gray-900/80 text-white text-center text-sm font-bold rounded-md py-0.5 px-1 border border-green-500 outline-none"
+              className="w-full bg-gray-900/80 text-white text-center text-xs font-bold rounded-md py-0.5 px-1 border border-green-500 outline-none"
             />
           ) : (
             <span
               onClick={handleNameClick}
-              className={`text-sm font-bold px-1.5 py-0.5 rounded-md transition-colors text-white uppercase hover:bg-black/50 cursor-pointer`}
+              className={`text-xs font-bold px-1.5 py-0.5 rounded-md transition-colors text-white uppercase hover:bg-black/50 cursor-pointer`}
             >
               {player.name}
             </span>

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react';
+import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { Player, BenchPlayer, TeamColor } from '../types';
 import PlayerMarker from './PlayerMarker';
 
@@ -10,6 +10,7 @@ interface SoccerFieldProps {
   updatePlayerPosition: (id: number, x: number, y: number) => void;
   updatePlayerName: (id: number, newName: string) => void;
   onReset: () => void;
+  matchInfo: { location: string, date: string } | null;
 }
 
 const VerticalFieldLinesSVG = () => (
@@ -41,12 +42,6 @@ const BenchList: React.FC<{ title: string; players: BenchPlayer[], teamColor: Te
         black: 'bg-gray-800/70 border-gray-600',
         white: 'bg-gray-200/70 border-gray-400 text-black',
     };
-    const titleColorClasses: Record<TeamColor, string> = {
-        red: 'bg-red-600',
-        blue: 'bg-blue-600',
-        black: 'bg-gray-600',
-        white: 'bg-gray-400 text-black',
-    };
 
     if (players.length === 0) return null;
 
@@ -61,7 +56,7 @@ const BenchList: React.FC<{ title: string; players: BenchPlayer[], teamColor: Te
 };
 
 
-const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, updatePlayerPosition, updatePlayerName, onReset }) => {
+const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, updatePlayerPosition, updatePlayerName, onReset, matchInfo }) => {
   const fieldRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
   const [activePlayerId, setActivePlayerId] = useState<number | null>(null);
@@ -74,6 +69,37 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
 
   const team1Bench = benchPlayers.filter(p => p.teamId === team1Color);
   const team2Bench = benchPlayers.filter(p => p.teamId === team2Color);
+
+  const formattedDate = matchInfo?.date 
+    ? new Intl.DateTimeFormat('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(matchInfo.date))
+    : '';
+  const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+
+  const calendarUrl = useMemo(() => {
+    if (!matchInfo) return '#';
+    
+    const { location, date } = matchInfo;
+    const eventTitle = `Partido Ligres, ${location}`;
+    const startDate = new Date(date);
+    
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 1);
+
+    const formatAllDay = (d: Date) => d.toISOString().split('T')[0].replace(/-/g, '');
+    
+    const formattedStartDate = formatAllDay(startDate);
+    const formattedEndDate = formatAllDay(endDate);
+
+    const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: eventTitle,
+        dates: `${formattedStartDate}/${formattedEndDate}`,
+        location: location,
+        details: 'Partido de fútbol organizado con Organizador Táctico Ligres.'
+    });
+
+    return `https://www.google.com/calendar/render?${params.toString()}`;
+  }, [matchInfo]);
 
 
   const handleMouseMove = useCallback((event: MouseEvent | TouchEvent) => {
@@ -147,7 +173,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
                     try {
                         await navigator.share({
                             title: 'Alineación Táctica',
-                            text: 'Así salimos a la cancha.',
+                            text: `Alineación para el partido en ${matchInfo?.location || ''}.`,
                             files: [file],
                         });
                     } catch (error) {
@@ -178,7 +204,61 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
 
   return (
     <div className="w-full flex flex-col items-center justify-center gap-6 animate-fade-in">
-        <div ref={exportRef} className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-2xl bg-gray-900 p-2 lg:p-4">
+        {/* Off-screen container for image export */}
+        <div
+            ref={exportRef}
+            className="absolute -top-[9999px] -left-[9999px] w-[500px] bg-gray-900 p-4 flex flex-col aspect-[4/5] font-sans"
+        >
+            {matchInfo && (
+                <div className="w-full text-center mb-4 px-3 py-2">
+                    <p className="font-bold text-2xl text-green-400">{matchInfo.location}</p>
+                    <p className="text-lg text-gray-300">{capitalizedDate}</p>
+                </div>
+            )}
+            <div className="relative w-full h-full bg-green-700 rounded-lg shadow-2xl border-4 border-gray-600 overflow-hidden">
+                <VerticalFieldLinesSVG />
+                {players.map(player => (
+                    <PlayerMarker
+                        key={player.id}
+                        player={player}
+                        onMouseDown={() => {}}
+                        isDragging={false}
+                        onUpdateName={() => {}}
+                    />
+                ))}
+            </div>
+        </div>
+
+        {/* Visible UI for interaction */}
+        <div className="w-full sm:max-w-sm md:max-w-md lg:max-w-2xl bg-gray-900 p-2 lg:p-4">
+            {matchInfo && (
+                <div className="w-full text-center mb-4 p-3 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="text-center sm:text-left">
+                        <p className="font-bold text-lg text-green-400">{matchInfo.location}</p>
+                        <p className="text-sm text-gray-300">{capitalizedDate}</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <a 
+                            href={calendarUrl}
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-md text-sm flex items-center justify-center gap-2 transition-colors"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>
+                            <span>Añadir al calendario</span>
+                        </a>
+                        <a 
+                            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(matchInfo.location)}`}
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-md text-sm flex items-center justify-center gap-2 transition-colors"
+                        >
+                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                            <span>Cómo llegar</span>
+                        </a>
+                    </div>
+                </div>
+            )}
             <div className="flex flex-col lg:flex-row items-center lg:items-stretch justify-center gap-4">
                  {hasBenches && (
                     <div className="hidden lg:flex flex-col justify-between self-stretch w-40 flex-shrink-0 space-y-4">
@@ -216,7 +296,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
                 className="w-full sm:flex-1 bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.898 2.162l-1.5-1.5a1 1 0 111.415-1.414l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.415-1.414l1.5-1.5A5.002 5.002 0 005 9V11a1 1 0 11-2 0V3a1 1 0 011-1z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M7.793 2.232a.75.75 0 0 1-.026 1.06L3.636 7.25h6.114a4.25 4.25 0 0 1 0 8.5H8a.75.75 0 0 1 0-1.5h1.75a2.75 2.75 0 0 0 0-5.5H3.636l4.131 3.958a.75.75 0 1 1-1.036 1.084l-5.5-5.25a.75.75 0 0 1 0-1.084l5.5-5.25a.75.75 0 0 1 1.06.026Z" clipRule="evenodd" />
                 </svg>
                 <span>Empezar de Nuevo</span>
             </button>
