@@ -44,4 +44,5 @@ export interface Match {
   team1Setup: TeamSetup;
   team2Setup: TeamSetup;
   feePerPlayer?: number;
+  playerPayments?: Record<number, boolean>;
 }

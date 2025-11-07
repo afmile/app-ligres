@@ -4,6 +4,7 @@ import PlayerSetup from './components/PlayerSetup';
 import SoccerField from './components/SoccerField';
 import History from './components/History';
 import PaymentTracker from './components/PaymentTracker';
+import Help from './components/Help';
 import { DEFAULT_LAYOUT_6_PLAYERS, DEFAULT_LAYOUT_7_PLAYERS } from './constants';
 
 const HISTORY_STORAGE_KEY = 'soccerLineupHistory';
@@ -12,10 +13,10 @@ const CURRENT_MATCH_STATE_KEY = 'currentMatchState';
 const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
     const newPlayers: Player[] = [];
     const newBenchPlayers: BenchPlayer[] = [];
-    let idCounter = 0;
+    let idCounter = 100;
 
     const layout1 = team1.size === 6 ? DEFAULT_LAYOUT_6_PLAYERS : DEFAULT_LAYOUT_7_PLAYERS;
-    layout1.forEach(posLayout => {
+    layout1.forEach((posLayout) => {
       newPlayers.push({
         id: idCounter++,
         name: team1.playerNames[posLayout.position] || `Jugador ${idCounter}`,
@@ -26,14 +27,14 @@ const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
       });
     });
 
-    team1.bench.forEach(name => {
+    team1.bench.forEach((name) => {
         if(name.trim()) {
             newBenchPlayers.push({ id: idCounter++, name, teamId: team1.color });
         }
     });
 
     const layout2 = team2.size === 6 ? DEFAULT_LAYOUT_6_PLAYERS : DEFAULT_LAYOUT_7_PLAYERS;
-    layout2.forEach(posLayout => {
+    layout2.forEach((posLayout) => {
       newPlayers.push({
         id: idCounter++,
         name: team2.playerNames[posLayout.position] || `Jugador ${idCounter}`,
@@ -44,7 +45,7 @@ const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
       });
     });
     
-    team2.bench.forEach(name => {
+    team2.bench.forEach((name) => {
         if(name.trim()) {
             newBenchPlayers.push({ id: idCounter++, name, teamId: team2.color });
         }
@@ -54,7 +55,7 @@ const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
 };
 
 function App() {
-  const [view, setView] = useState<'setup' | 'field' | 'history' | 'payment'>('setup');
+  const [view, setView] = useState<'setup' | 'field' | 'history' | 'payment' | 'help'>('setup');
   const [players, setPlayers] = useState<Player[]>([]);
   const [benchPlayers, setBenchPlayers] = useState<BenchPlayer[]>([]);
   const [matchInfo, setMatchInfo] = useState<{location: string, date: string} | null>(null);
@@ -62,19 +63,21 @@ function App() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [feePerPlayer, setFeePerPlayer] = useState<number | undefined>();
   const [playerPayments, setPlayerPayments] = useState<Record<number, boolean>>({});
+  const [currentMatchId, setCurrentMatchId] = useState<string | null>(null);
 
 
   useEffect(() => {
     try {
       const storedMatchState = localStorage.getItem(CURRENT_MATCH_STATE_KEY);
       if (storedMatchState) {
-        const { view, players, benchPlayers, matchInfo, feePerPlayer, playerPayments } = JSON.parse(storedMatchState);
+        const { view, players, benchPlayers, matchInfo, feePerPlayer, playerPayments, currentMatchId } = JSON.parse(storedMatchState);
         if ((view === 'field' || view === 'payment') && players && benchPlayers && matchInfo) {
           setPlayers(players);
           setBenchPlayers(benchPlayers);
           setMatchInfo(matchInfo);
           setFeePerPlayer(feePerPlayer);
           setPlayerPayments(playerPayments || {});
+          setCurrentMatchId(currentMatchId || null);
           setView(view);
         }
       }
@@ -98,7 +101,7 @@ function App() {
     }
   };
 
-  const handleSaveMatch = (matchData: Omit<Match, 'id'>) => {
+  const handleSaveMatch = (matchData: Omit<Match, 'id'>): Match => {
     const newMatch: Match = { ...matchData, id: new Date().toISOString() };
     const updatedHistory = [newMatch, ...history.slice(0, 19)]; // Keep latest 20
     setHistory(updatedHistory);
@@ -107,34 +110,45 @@ function App() {
     } catch (error) {
       console.error("Failed to save history to localStorage:", error);
     }
+    return newMatch;
   };
   
   const handleLoadMatch = (match: Match) => {
     const { players, benchPlayers } = createPlayersFromSetup(match.team1Setup, match.team2Setup);
     const newMatchInfo = { location: match.location, date: match.date };
     const fee = match.feePerPlayer;
+    const payments = match.playerPayments || {};
     setPlayers(players);
     setBenchPlayers(benchPlayers);
     setMatchInfo(newMatchInfo);
     setFeePerPlayer(fee);
-    setPlayerPayments({}); // Reset payments when loading a new match
+    setPlayerPayments(payments);
+    setCurrentMatchId(match.id);
     setView('field');
     
-    saveCurrentMatchState({ view: 'field', players, benchPlayers, matchInfo: newMatchInfo, feePerPlayer: fee, playerPayments: {} });
+    saveCurrentMatchState({ view: 'field', players, benchPlayers, matchInfo: newMatchInfo, feePerPlayer: fee, playerPayments: payments, currentMatchId: match.id });
   };
   
   const handleSetupComplete = (team1: TeamSetup, team2: TeamSetup, location: string, date: string, fee?: number) => {
-    handleSaveMatch({ location, date, team1Setup: team1, team2Setup: team2, feePerPlayer: fee });
     const { players, benchPlayers } = createPlayersFromSetup(team1, team2);
+    // Create an initial empty payment object based on the new players
+    const initialPayments: Record<number, boolean> = {};
+    [...players, ...benchPlayers].forEach(p => {
+        initialPayments[p.id] = false;
+    });
+
+    const newMatch = handleSaveMatch({ location, date, team1Setup: team1, team2Setup: team2, feePerPlayer: fee, playerPayments: initialPayments });
+    
     const newMatchInfo = { location, date };
     setPlayers(players);
     setBenchPlayers(benchPlayers);
     setMatchInfo(newMatchInfo);
     setFeePerPlayer(fee);
-    setPlayerPayments({});
+    setPlayerPayments(initialPayments);
+    setCurrentMatchId(newMatch.id);
     setView('field');
     
-    saveCurrentMatchState({ view: 'field', players, benchPlayers, matchInfo: newMatchInfo, feePerPlayer: fee, playerPayments: {} });
+    saveCurrentMatchState({ view: 'field', players, benchPlayers, matchInfo: newMatchInfo, feePerPlayer: fee, playerPayments: initialPayments, currentMatchId: newMatch.id });
   };
 
   const updatePlayerPosition = (id: number, x: number, y: number) => {
@@ -168,9 +182,10 @@ function App() {
         setMatchInfo(matchData.matchInfo);
         setFeePerPlayer(matchData.feePerPlayer);
         setPlayerPayments(matchData.playerPayments || {});
+        setCurrentMatchId(null); // Imported match is not from history
         setView(newView);
         
-        saveCurrentMatchState({ view: newView, ...matchData });
+        saveCurrentMatchState({ view: newView, ...matchData, currentMatchId: null });
         alert('Partido importado con éxito!');
       } else {
         throw new Error('Archivo de partido inválido.');
@@ -182,12 +197,33 @@ function App() {
   };
 
   const handleReset = () => {
+    if (currentMatchId && history.find(m => m.id === currentMatchId)) {
+        const updatedHistory = history.map(match => {
+            if (match.id === currentMatchId) {
+                // Find current team setups from the match in history
+                const currentMatchInHistory = history.find(m => m.id === currentMatchId);
+                if (currentMatchInHistory) {
+                    const { players, benchPlayers } = createPlayersFromSetup(currentMatchInHistory.team1Setup, currentMatchInHistory.team2Setup);
+                    const finalPayments: Record<number, boolean> = {};
+                    [...players, ...benchPlayers].forEach(p => {
+                        finalPayments[p.id] = playerPayments[p.id] || false;
+                    });
+                    return { ...match, playerPayments: finalPayments };
+                }
+            }
+            return match;
+        });
+        setHistory(updatedHistory);
+        localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(updatedHistory));
+    }
+
     setView('setup');
     setPlayers([]);
     setBenchPlayers([]);
     setMatchInfo(null);
     setFeePerPlayer(undefined);
     setPlayerPayments({});
+    setCurrentMatchId(null);
     localStorage.removeItem(CURRENT_MATCH_STATE_KEY);
   };
   
@@ -213,6 +249,17 @@ function App() {
     text += formatTeam(match.team1Setup);
     text += "\n\n";
     text += formatTeam(match.team2Setup);
+
+    if (match.feePerPlayer && match.feePerPlayer > 0 && match.playerPayments) {
+        text += "\n\n--- ESTADO DE PAGOS ---\n";
+        const { players, benchPlayers } = createPlayersFromSetup(match.team1Setup, match.team2Setup);
+        const allPlayers = [...players, ...benchPlayers];
+        
+        allPlayers.sort((a,b) => a.name.localeCompare(b.name)).forEach(player => {
+            const paid = match.playerPayments?.[player.id] || false;
+            text += `- ${player.name}: ${paid ? 'Pagado' : 'Pendiente'}\n`;
+        });
+    }
 
     const blob = new Blob([text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -268,6 +315,8 @@ function App() {
             matchInfo={matchInfo}
           />
         );
+      case 'help':
+        return <Help onBack={() => setView('setup')} />;
       case 'setup':
       default:
         return <PlayerSetup onSetupComplete={handleSetupComplete} history={history} onShowHistory={() => setView('history')} />;
@@ -286,6 +335,9 @@ function App() {
       </main>
       <footer className="w-full max-w-7xl text-center mt-8 text-gray-500 text-sm">
         <p>Creado por AFML</p>
+        <button onClick={() => setView('help')} className="mt-2 text-gray-400 hover:text-green-400 transition-colors">
+            Ayuda
+        </button>
       </footer>
     </div>
   );
