@@ -1,5 +1,6 @@
-
 import { PositionLayout, PositionName } from './types';
+
+export const APP_VERSION = '1.0.0';
 
 export const POSITIONS_6_PLAYERS: PositionName[] = [
   'Portero',

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Player, TeamSetup, BenchPlayer, Match } from './types';
 import PlayerSetup from './components/PlayerSetup';
@@ -5,7 +6,7 @@ import SoccerField from './components/SoccerField';
 import History from './components/History';
 import PaymentTracker from './components/PaymentTracker';
 import Help from './components/Help';
-import { DEFAULT_LAYOUT_6_PLAYERS, DEFAULT_LAYOUT_7_PLAYERS } from './constants';
+import { DEFAULT_LAYOUT_6_PLAYERS, DEFAULT_LAYOUT_7_PLAYERS, APP_VERSION } from './constants';
 
 const HISTORY_STORAGE_KEY = 'soccerLineupHistory';
 const CURRENT_MATCH_STATE_KEY = 'currentMatchState';
@@ -262,6 +263,7 @@ function App() {
     }
 
     const blob = new Blob([text], { type: 'text/plain' });
+    // FIX: Changed URL.ObjectURL to URL.createObjectURL
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -335,6 +337,7 @@ function App() {
       </main>
       <footer className="w-full max-w-7xl text-center mt-8 text-gray-500 text-sm">
         <p>Creado por AFML</p>
+        <p className="text-xs text-gray-600 mt-1">Versión {APP_VERSION}</p>
         <button onClick={() => setView('help')} className="mt-2 text-gray-400 hover:text-green-400 transition-colors">
             Ayuda
         </button>
