@@ -3,6 +3,7 @@ import { Player, TeamSetup, BenchPlayer, Match } from './types';
 import PlayerSetup from './components/PlayerSetup';
 import SoccerField from './components/SoccerField';
 import History from './components/History';
+import PaymentTracker from './components/PaymentTracker';
 import { DEFAULT_LAYOUT_6_PLAYERS, DEFAULT_LAYOUT_7_PLAYERS } from './constants';
 
 const HISTORY_STORAGE_KEY = 'soccerLineupHistory';
@@ -53,25 +54,28 @@ const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
 };
 
 function App() {
-  const [view, setView] = useState<'setup' | 'field' | 'history'>('setup');
+  const [view, setView] = useState<'setup' | 'field' | 'history' | 'payment'>('setup');
   const [players, setPlayers] = useState<Player[]>([]);
   const [benchPlayers, setBenchPlayers] = useState<BenchPlayer[]>([]);
   const [matchInfo, setMatchInfo] = useState<{location: string, date: string} | null>(null);
   const [history, setHistory] = useState<Match[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [feePerPlayer, setFeePerPlayer] = useState<number | undefined>();
+  const [playerPayments, setPlayerPayments] = useState<Record<number, boolean>>({});
 
 
   useEffect(() => {
     try {
-      // Prioritize restoring an active match
       const storedMatchState = localStorage.getItem(CURRENT_MATCH_STATE_KEY);
       if (storedMatchState) {
-        const { view, players, benchPlayers, matchInfo } = JSON.parse(storedMatchState);
-        if (view === 'field' && players && benchPlayers && matchInfo) {
+        const { view, players, benchPlayers, matchInfo, feePerPlayer, playerPayments } = JSON.parse(storedMatchState);
+        if ((view === 'field' || view === 'payment') && players && benchPlayers && matchInfo) {
           setPlayers(players);
           setBenchPlayers(benchPlayers);
           setMatchInfo(matchInfo);
-          setView('field');
+          setFeePerPlayer(feePerPlayer);
+          setPlayerPayments(playerPayments || {});
+          setView(view);
         }
       }
       
@@ -85,6 +89,14 @@ function App() {
         setIsInitialized(true);
     }
   }, []);
+  
+  const saveCurrentMatchState = (state: any) => {
+    try {
+      localStorage.setItem(CURRENT_MATCH_STATE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error("Failed to save current match state:", error);
+    }
+  };
 
   const handleSaveMatch = (matchData: Omit<Match, 'id'>) => {
     const newMatch: Match = { ...matchData, id: new Date().toISOString() };
@@ -100,64 +112,82 @@ function App() {
   const handleLoadMatch = (match: Match) => {
     const { players, benchPlayers } = createPlayersFromSetup(match.team1Setup, match.team2Setup);
     const newMatchInfo = { location: match.location, date: match.date };
+    const fee = match.feePerPlayer;
     setPlayers(players);
     setBenchPlayers(benchPlayers);
     setMatchInfo(newMatchInfo);
+    setFeePerPlayer(fee);
+    setPlayerPayments({}); // Reset payments when loading a new match
     setView('field');
     
-    // Persist this loaded match state
-    try {
-        localStorage.setItem(CURRENT_MATCH_STATE_KEY, JSON.stringify({ view: 'field', players, benchPlayers, matchInfo: newMatchInfo }));
-    } catch (error) {
-        console.error("Failed to save current match state:", error);
-    }
+    saveCurrentMatchState({ view: 'field', players, benchPlayers, matchInfo: newMatchInfo, feePerPlayer: fee, playerPayments: {} });
   };
   
-  const handleSetupComplete = (team1: TeamSetup, team2: TeamSetup, location: string, date: string) => {
-    handleSaveMatch({ location, date, team1Setup: team1, team2Setup: team2 });
+  const handleSetupComplete = (team1: TeamSetup, team2: TeamSetup, location: string, date: string, fee?: number) => {
+    handleSaveMatch({ location, date, team1Setup: team1, team2Setup: team2, feePerPlayer: fee });
     const { players, benchPlayers } = createPlayersFromSetup(team1, team2);
     const newMatchInfo = { location, date };
     setPlayers(players);
     setBenchPlayers(benchPlayers);
     setMatchInfo(newMatchInfo);
+    setFeePerPlayer(fee);
+    setPlayerPayments({});
     setView('field');
     
-    // Persist the new match state
-    try {
-        localStorage.setItem(CURRENT_MATCH_STATE_KEY, JSON.stringify({ view: 'field', players, benchPlayers, matchInfo: newMatchInfo }));
-    } catch (error) {
-        console.error("Failed to save current match state:", error);
-    }
+    saveCurrentMatchState({ view: 'field', players, benchPlayers, matchInfo: newMatchInfo, feePerPlayer: fee, playerPayments: {} });
   };
 
   const updatePlayerPosition = (id: number, x: number, y: number) => {
     const updatedPlayers = players.map(player => (player.id === id ? { ...player, x, y } : player));
     setPlayers(updatedPlayers);
-    try {
-        const currentState = JSON.parse(localStorage.getItem(CURRENT_MATCH_STATE_KEY) || '{}');
-        localStorage.setItem(CURRENT_MATCH_STATE_KEY, JSON.stringify({ ...currentState, players: updatedPlayers }));
-    } catch (error) {
-        console.error("Failed to update player position in storage:", error);
-    }
+    const currentState = JSON.parse(localStorage.getItem(CURRENT_MATCH_STATE_KEY) || '{}');
+    saveCurrentMatchState({ ...currentState, players: updatedPlayers });
   };
 
   const updatePlayerName = (id: number, newName: string) => {
-    // FIX: Corrected a typo from `p` to `player` to ensure the correct object is returned in the map function.
     const updatedPlayers = players.map(player => (player.id === id ? { ...player, name: newName } : player));
     setPlayers(updatedPlayers);
-    try {
-        const currentState = JSON.parse(localStorage.getItem(CURRENT_MATCH_STATE_KEY) || '{}');
-        localStorage.setItem(CURRENT_MATCH_STATE_KEY, JSON.stringify({ ...currentState, players: updatedPlayers }));
-    } catch (error) {
-        console.error("Failed to update player name in storage:", error);
-    }
+    const currentState = JSON.parse(localStorage.getItem(CURRENT_MATCH_STATE_KEY) || '{}');
+    saveCurrentMatchState({ ...currentState, players: updatedPlayers });
   };
   
+    const handleUpdatePlayerPayment = (playerId: number, isPaid: boolean) => {
+    const updatedPayments = { ...playerPayments, [playerId]: isPaid };
+    setPlayerPayments(updatedPayments);
+    const currentState = JSON.parse(localStorage.getItem(CURRENT_MATCH_STATE_KEY) || '{}');
+    saveCurrentMatchState({ ...currentState, playerPayments: updatedPayments });
+  };
+
+  const handleImportMatch = (matchDataString: string) => {
+    try {
+      const matchData = JSON.parse(matchDataString);
+      if (matchData.players && matchData.benchPlayers && matchData.matchInfo) {
+        const newView = matchData.feePerPlayer ? 'payment' : 'field';
+        setPlayers(matchData.players);
+        setBenchPlayers(matchData.benchPlayers);
+        setMatchInfo(matchData.matchInfo);
+        setFeePerPlayer(matchData.feePerPlayer);
+        setPlayerPayments(matchData.playerPayments || {});
+        setView(newView);
+        
+        saveCurrentMatchState({ view: newView, ...matchData });
+        alert('Partido importado con éxito!');
+      } else {
+        throw new Error('Archivo de partido inválido.');
+      }
+    } catch (error) {
+      console.error("Error al importar el partido:", error);
+      alert('Error al importar el partido. Asegúrate de que el archivo es correcto.');
+    }
+  };
+
   const handleReset = () => {
     setView('setup');
     setPlayers([]);
     setBenchPlayers([]);
     setMatchInfo(null);
+    setFeePerPlayer(undefined);
+    setPlayerPayments({});
     localStorage.removeItem(CURRENT_MATCH_STATE_KEY);
   };
   
@@ -208,6 +238,8 @@ function App() {
             updatePlayerName={updatePlayerName}
             onReset={handleReset}
             matchInfo={matchInfo}
+            feePerPlayer={feePerPlayer}
+            onGoToPayments={() => setView('payment')}
           />
         );
       case 'history':
@@ -221,6 +253,19 @@ function App() {
               setHistory([]);
               localStorage.removeItem(HISTORY_STORAGE_KEY);
             }}
+          />
+        );
+      case 'payment':
+        return (
+          <PaymentTracker
+            players={players}
+            benchPlayers={benchPlayers}
+            feePerPlayer={feePerPlayer || 0}
+            playerPayments={playerPayments}
+            onUpdatePayment={handleUpdatePlayerPayment}
+            onBackToField={() => setView('field')}
+            onImportMatch={handleImportMatch}
+            matchInfo={matchInfo}
           />
         );
       case 'setup':

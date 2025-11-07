@@ -43,4 +43,5 @@ export interface Match {
   date: string; // Stored as ISO string
   team1Setup: TeamSetup;
   team2Setup: TeamSetup;
+  feePerPlayer?: number;
 }

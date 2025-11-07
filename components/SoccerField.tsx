@@ -11,6 +11,8 @@ interface SoccerFieldProps {
   updatePlayerName: (id: number, newName: string) => void;
   onReset: () => void;
   matchInfo: { location: string, date: string } | null;
+  feePerPlayer?: number;
+  onGoToPayments: () => void;
 }
 
 const VerticalFieldLinesSVG = () => (
@@ -56,7 +58,7 @@ const BenchList: React.FC<{ title: string; players: BenchPlayer[], teamColor: Te
 };
 
 
-const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, updatePlayerPosition, updatePlayerName, onReset, matchInfo }) => {
+const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, updatePlayerPosition, updatePlayerName, onReset, matchInfo, feePerPlayer, onGoToPayments }) => {
   const fieldRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
   const [activePlayerId, setActivePlayerId] = useState<number | null>(null);
@@ -290,7 +292,21 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
                 </div>
              )}
         </div>
-        <div className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-2xl flex flex-col sm:flex-row items-center gap-4">
+         {feePerPlayer && feePerPlayer > 0 && (
+            <div className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-2xl mt-4">
+                <button 
+                    onClick={onGoToPayments}
+                    className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2"
+                >
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M8.433 7.418c.158-.103.346-.195.574-.277a6.213 6.213 0 012.218 0c.228.082.416.174.574.277a3.413 3.413 0 011.698 2.825c0 .363-.043.71-.128 1.045A3.99 3.99 0 0112 13.5a3.99 3.99 0 01-1.789-1.212A4.02 4.02 0 0110 13.5a4.02 4.02 0 01-.211.005 3.99 3.99 0 01-1.789 1.212 3.99 3.99 0 01-1.212.212c-.733 0-1.42-.231-1.99-.637a4.026 4.026 0 01-1.045-.128C3.043 11.95 3 11.603 3 11.24c0-1.12.503-2.164 1.302-2.825a3.413 3.413 0 011.698-2.825z" />
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0 2a10 10 0 100-20 10 10 0 000 20z" clipRule="evenodd" />
+                    </svg>
+                    <span>Gestionar Pagos</span>
+                </button>
+            </div>
+        )}
+        <div className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-2xl flex flex-col sm:flex-row items-center gap-4 mt-4">
             <button 
                 onClick={onReset}
                 className="w-full sm:flex-1 bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2"
