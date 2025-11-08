@@ -203,30 +203,6 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const formRef = useRef<HTMLFormElement>(null);
   
-  const playSaveSound = () => {
-    try {
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        if (!audioCtx) return;
-
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); 
-        
-        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime); 
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2);
-
-        oscillator.start(audioCtx.currentTime);
-        oscillator.stop(audioCtx.currentTime + 0.2);
-    } catch (error) {
-        console.error("Could not play sound:", error);
-    }
-  };
-
   useEffect(() => {
     try {
         const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
@@ -309,12 +285,11 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
 
   const handleLockMatchInfo = () => {
     if (isMatchInfoValid) {
-        playSaveSound();
         setSaveState('saving');
         setTimeout(() => {
             setSaveState('saved');
+            setIsMatchInfoLocked(true); // Trigger transition
             setTimeout(() => {
-                setIsMatchInfoLocked(true);
                 setSaveState('idle');
             }, 800);
         }, 700);
@@ -356,39 +331,45 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
     <div className="w-full max-w-4xl mx-auto space-y-8 animate-fade-in">
       <div className="bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl border border-gray-700">
         <h3 className="text-xl font-bold text-center mb-4 text-green-400">Lugar y fecha</h3>
-        {isMatchInfoLocked ? (
-          <div className="animate-fade-in space-y-4">
+        <div className="grid min-h-[210px] sm:min-h-[160px]">
+           {/* Locked View */}
+          <div className={`col-start-1 row-start-1 transition-all duration-500 ease-in-out ${isMatchInfoLocked ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`}>
+             <div className="space-y-4">
               <div className="p-4 bg-gray-900/50 rounded-lg"><p className="text-sm font-semibold text-gray-400 text-center">Lugar</p><div className="flex items-center justify-center gap-2 mt-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 20l-4.95-5.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg><p className="text-lg font-bold text-white text-center">{location}</p></div></div>
               <div className="p-4 bg-gray-900/50 rounded-lg"><p className="text-sm font-semibold text-gray-400 text-center">Fecha</p><div className="flex items-center justify-center gap-2 mt-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg><p className="text-lg text-white text-center">{formattedDate}</p></div></div>
               <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-end">
-                  <button type="button" onClick={handleUnlockMatchInfo} className="bg-yellow-600 hover:bg-yellow-500 text-white font-semibold px-3 py-2 rounded-md text-sm flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg>Modificar</button>
+                  <button type="button" onClick={handleUnlockMatchInfo} className="bg-yellow-600 hover:bg-yellow-500 text-white font-semibold px-3 py-2 rounded-md text-sm flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2-2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg>Modificar</button>
                    <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-3 py-2 rounded-md text-sm flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg><span className="hidden sm:inline">Añadir al calendario</span><span className="sm:hidden">Calendario</span></a>
                   <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(location)}`} target="_blank" rel="noopener noreferrer" className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-3 py-2 rounded-md text-sm flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" /></svg>Cómo llegar</a>
               </div>
+            </div>
           </div>
-        ) : (
-          <div className="animate-fade-in"><div className="space-y-4"><div className="relative"><div className="flex justify-between items-center mb-1"><label htmlFor="location" className="block text-sm font-medium text-gray-300">Lugar del Partido</label>{recentLocations.length > 0 && (<button type="button" onClick={() => setShowRecentLocations(!showRecentLocations)} className="text-sm text-gray-400 hover:text-white opacity-75 hover:opacity-100 transition-opacity">Lugares recientes</button>)}</div><input type="text" id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ej: Cancha Los Héroes" className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" required/>{showRecentLocations && recentLocations.length > 0 && (<div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg"><ul className="py-1">{recentLocations.map(loc => (<li key={loc} onClick={() => { setLocation(loc); setShowRecentLocations(false); }} className="px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 cursor-pointer">{loc}</li>))}</ul></div>)}</div><div><label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-1">Fecha</label><input type="date" id="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500" required /><p className="text-center text-gray-400 mt-2 text-sm">{formattedDate}</p></div></div><div className="mt-4 flex flex-col sm:flex-row gap-2 justify-end">
-            <button 
-                type="button" 
-                onClick={handleLockMatchInfo} 
-                disabled={!isMatchInfoValid || saveState !== 'idle'} 
-                className="bg-green-600 hover:bg-green-500 text-white font-semibold px-3 py-2 rounded-md text-sm flex items-center justify-center gap-2 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 w-28 h-9"
-            >
-                {saveState === 'idle' && (
-                    <><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" /></svg>
-                    <span>Guardar</span></>
-                )}
-                {saveState === 'saving' && (
-                    <><svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <span>Guardando</span></>
-                )}
-                {saveState === 'saved' && (
-                    <><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                    <span>Guardado</span></>
-                )}
-            </button>
-            </div></div>
-        )}
+
+          {/* Unlocked (Form) View */}
+          <div className={`col-start-1 row-start-1 transition-all duration-500 ease-in-out ${isMatchInfoLocked ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
+            <div className="space-y-4"><div className="relative"><div className="flex justify-between items-center mb-1"><label htmlFor="location" className="block text-sm font-medium text-gray-300">Lugar del Partido</label>{recentLocations.length > 0 && (<button type="button" onClick={() => setShowRecentLocations(!showRecentLocations)} className="text-sm text-gray-400 hover:text-white opacity-75 hover:opacity-100 transition-opacity">Lugares recientes</button>)}</div><input type="text" id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ej: Cancha Los Héroes" className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" required/>{showRecentLocations && recentLocations.length > 0 && (<div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg"><ul className="py-1">{recentLocations.map(loc => (<li key={loc} onClick={() => { setLocation(loc); setShowRecentLocations(false); }} className="px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 cursor-pointer">{loc}</li>))}</ul></div>)}</div><div><label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-1">Fecha</label><input type="date" id="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500" required /><p className="text-center text-gray-400 mt-2 text-sm">{formattedDate}</p></div></div><div className="mt-4 flex flex-col sm:flex-row gap-2 justify-end">
+                <button 
+                    type="button" 
+                    onClick={handleLockMatchInfo} 
+                    disabled={!isMatchInfoValid || saveState !== 'idle'} 
+                    className="bg-green-600 hover:bg-green-500 text-white font-semibold px-3 py-2 rounded-md text-sm flex items-center justify-center gap-2 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 w-28 h-9"
+                >
+                    {saveState === 'idle' && (
+                        <><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" /></svg>
+                        <span>Guardar</span></>
+                    )}
+                    {saveState === 'saving' && (
+                        <><svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <span>Guardando</span></>
+                    )}
+                    {saveState === 'saved' && (
+                        <><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                        <span>Guardado</span></>
+                    )}
+                </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} id="setupForm" ref={formRef}>
