@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Player, TeamSetup, BenchPlayer, Match } from './types';
 import PlayerSetup from './components/PlayerSetup';
@@ -94,6 +95,29 @@ function App() {
     }
   }, []);
   
+  // Haptic feedback for interactions
+  useEffect(() => {
+    const triggerHapticFeedback = () => {
+      if (navigator.vibrate) {
+        navigator.vibrate(10); // A short, subtle vibration for UI feedback
+      }
+    };
+
+    const handleGlobalClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // Trigger on buttons, links, and elements with button/switch roles
+      if (target.closest('button, a[href], [role="button"], [role="switch"]')) {
+        triggerHapticFeedback();
+      }
+    };
+
+    document.addEventListener('click', handleGlobalClick);
+
+    return () => {
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, []);
+
   const saveCurrentMatchState = (state: any) => {
     try {
       localStorage.setItem(CURRENT_MATCH_STATE_KEY, JSON.stringify(state));
@@ -267,7 +291,7 @@ function App() {
     // FIX: Changed URL.ObjectURL to URL.createObjectURL
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
+a.href = url;
     a.download = `alineacion-${new Date(match.date).toISOString().split('T')[0]}.txt`;
     document.body.appendChild(a);
     a.click();
