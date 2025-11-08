@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { POSITIONS_6_PLAYERS, POSITIONS_7_PLAYERS } from '../constants';
-import { PositionName, TeamColor, TeamSetup, Match } from '../types';
+import { PositionName, TeamColor, TeamSetup, Match, Formation } from '../types';
 
 interface PlayerSetupProps {
   onSetupComplete: (team1: TeamSetup, team2: TeamSetup, location: string, date: string, feePerPlayer?: number) => void;
@@ -10,6 +10,34 @@ interface PlayerSetupProps {
 
 const ALL_COLORS: TeamColor[] = ['red', 'blue', 'black', 'white'];
 const DRAFT_STORAGE_KEY = 'soccerLineupDraft';
+
+const FormationSelector: React.FC<{
+  selectedFormation: Formation;
+  onSelectFormation: (formation: Formation) => void;
+}> = ({ selectedFormation, onSelectFormation }) => {
+  const formations: Formation[] = ['Defensiva', 'Equilibrada', 'Ofensiva'];
+  return (
+    <div>
+      <h3 className="text-lg font-semibold mb-3 text-center">Formación Táctica</h3>
+      <div className="flex bg-gray-700 rounded-lg p-1">
+        {formations.map((formation) => (
+          <button
+            key={formation}
+            type="button"
+            onClick={() => onSelectFormation(formation)}
+            className={`flex-1 py-2 px-2 text-sm font-bold rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-700 focus:ring-green-500 ${
+              selectedFormation === formation
+                ? 'bg-green-600 text-white shadow'
+                : 'text-gray-300 hover:bg-gray-600/50'
+            }`}
+          >
+            {formation}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const TeamForm: React.FC<{
   teamLabel: string;
@@ -22,6 +50,8 @@ const TeamForm: React.FC<{
   isBenchEnabled: boolean;
   benchNames: string[];
   setBenchNames: (names: string[]) => void;
+  formation: Formation;
+  setFormation: (formation: Formation) => void;
 }> = ({
   teamLabel,
   teamColor,
@@ -33,6 +63,8 @@ const TeamForm: React.FC<{
   isBenchEnabled,
   benchNames,
   setBenchNames,
+  formation,
+  setFormation,
 }) => {
   
   const handleNameChange = (position: PositionName, name: string) => {
@@ -91,6 +123,8 @@ const TeamForm: React.FC<{
         </div>
       </div>
       
+      <FormationSelector selectedFormation={formation} onSelectFormation={setFormation} />
+
       <div>
           <h3 className="text-lg font-semibold mb-3 text-center">Nombres de Jugadores</h3>
            <div className="grid grid-cols-1 gap-4">
@@ -114,7 +148,7 @@ const TeamForm: React.FC<{
       </div>
       
       {isBenchEnabled && (
-         <div>
+         <div className="animate-fade-in">
           <h3 className="text-lg font-semibold mb-3 text-center">Banca de Suplentes</h3>
            <div className="grid grid-cols-1 gap-4">
             {benchNames.map((name, index) => (
@@ -164,6 +198,8 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
   const [showRecentLocations, setShowRecentLocations] = useState(false);
   const [isFeeEnabled, setIsFeeEnabled] = useState(false);
   const [feeValue, setFeeValue] = useState('');
+  const [team1Formation, setTeam1Formation] = useState<Formation>('Equilibrada');
+  const [team2Formation, setTeam2Formation] = useState<Formation>('Equilibrada');
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -184,6 +220,8 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
             setTeam2Bench(draft.team2Bench ?? ['', '', '']);
             setIsFeeEnabled(draft.isFeeEnabled ?? false);
             setFeeValue(draft.feeValue ?? '');
+            setTeam1Formation(draft.team1Formation ?? 'Equilibrada');
+            setTeam2Formation(draft.team2Formation ?? 'Equilibrada');
         }
     } catch (error) {
         console.error("Failed to load draft from localStorage:", error);
@@ -195,7 +233,7 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
     const draft = {
         location, date, isMatchInfoLocked, team1Color, team2Color, 
         teamSize, team1Names, team2Names, isBenchEnabled, team1Bench, team2Bench,
-        isFeeEnabled, feeValue,
+        isFeeEnabled, feeValue, team1Formation, team2Formation,
     };
     try {
         localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
@@ -205,7 +243,7 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
   }, [
       location, date, isMatchInfoLocked, team1Color, team2Color, 
       teamSize, team1Names, team2Names, isBenchEnabled, team1Bench, team2Bench,
-      isFeeEnabled, feeValue
+      isFeeEnabled, feeValue, team1Formation, team2Formation
   ]);
 
   const positions = useMemo(() => teamSize === 6 ? POSITIONS_6_PLAYERS : POSITIONS_7_PLAYERS, [teamSize]);
@@ -252,8 +290,8 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
     if (!isFormValid) return;
     
     onSetupComplete(
-        { color: team1Color, size: teamSize, playerNames: team1Names, bench: isBenchEnabled ? team1Bench.filter(n => n.trim()) : [] },
-        { color: team2Color, size: teamSize, playerNames: team2Names, bench: isBenchEnabled ? team2Bench.filter(n => n.trim()) : [] },
+        { color: team1Color, size: teamSize, playerNames: team1Names, bench: isBenchEnabled ? team1Bench.filter(n => n.trim()) : [], formation: team1Formation },
+        { color: team2Color, size: teamSize, playerNames: team2Names, bench: isBenchEnabled ? team2Bench.filter(n => n.trim()) : [], formation: team2Formation },
         location,
         new Date(date).toISOString(),
         isFeeEnabled ? Number(feeValue) : undefined
@@ -278,8 +316,8 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
   }, [feeValue, teamSize, isFeeEnabled]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-8">
-      <div className="bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl border border-gray-700 animate-fade-in">
+    <div className="w-full max-w-4xl mx-auto space-y-8 animate-fade-in">
+      <div className="bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl border border-gray-700">
         <h3 className="text-xl font-bold text-center mb-4 text-green-400">Lugar y fecha</h3>
         {isMatchInfoLocked ? (
           <div className="animate-fade-in space-y-4">
@@ -297,7 +335,7 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
       </div>
 
       <form onSubmit={handleSubmit} id="setupForm" ref={formRef}>
-          <div className="bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl border border-gray-700 animate-fade-in">
+          <div className="bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl border border-gray-700">
                 <div className="mb-8 space-y-4">
                     <div className={history.length > 0 ? 'flex justify-between items-center' : ''}><h3 className={`text-lg font-semibold ${history.length === 0 ? 'text-center' : ''}`}>Configurar Plantilla</h3>{history.length > 0 && (<button type="button" onClick={onShowHistory} className="bg-gray-700/50 hover:bg-gray-600/50 text-white text-sm font-semibold py-1 px-3 rounded-lg transition-colors opacity-75 hover:opacity-100">Historial</button>)}</div>
                     <div className="flex space-x-4">
@@ -306,13 +344,13 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
                     <div className="flex items-center justify-center bg-gray-800 p-4 rounded-lg"><label htmlFor="bench-toggle" className="font-semibold mr-4">Activar Banca</label><button type="button" role="switch" aria-checked={isBenchEnabled} onClick={toggleBench} id="bench-toggle" className={`${isBenchEnabled ? 'bg-green-600' : 'bg-gray-600'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800`}><span className={`${isBenchEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}/></button></div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <TeamForm teamLabel={team1Label} teamColor={team1Color} setTeamColor={setTeam1Color} otherTeamColor={team2Color} playerNames={team1Names} setPlayerNames={setTeam1Names} positions={positions} isBenchEnabled={isBenchEnabled} benchNames={team1Bench} setBenchNames={setTeam1Bench}/>
-                    <TeamForm teamLabel={team2Label} teamColor={team2Color} setTeamColor={setTeam2Color} otherTeamColor={team1Color} playerNames={team2Names} setPlayerNames={setTeam2Names} positions={positions} isBenchEnabled={isBenchEnabled} benchNames={team2Bench} setBenchNames={setTeam2Bench}/>
+                    <TeamForm teamLabel={team1Label} teamColor={team1Color} setTeamColor={setTeam1Color} otherTeamColor={team2Color} playerNames={team1Names} setPlayerNames={setTeam1Names} positions={positions} isBenchEnabled={isBenchEnabled} benchNames={team1Bench} setBenchNames={setTeam1Bench} formation={team1Formation} setFormation={setTeam1Formation}/>
+                    <TeamForm teamLabel={team2Label} teamColor={team2Color} setTeamColor={setTeam2Color} otherTeamColor={team1Color} playerNames={team2Names} setPlayerNames={setTeam2Names} positions={positions} isBenchEnabled={isBenchEnabled} benchNames={team2Bench} setBenchNames={setTeam2Bench} formation={team2Formation} setFormation={setTeam2Formation}/>
                 </div>
           </div>
       </form>
 
-      <div className="bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl border border-gray-700 animate-fade-in space-y-4">
+      <div className="bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl border border-gray-700 space-y-4">
         <div className="flex items-center justify-between"><h3 className="text-xl font-bold text-green-400">Cuota por Jugador</h3><button type="button" role="switch" aria-checked={isFeeEnabled} onClick={() => setIsFeeEnabled(!isFeeEnabled)} id="fee-toggle" className={`${isFeeEnabled ? 'bg-green-600' : 'bg-gray-600'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800`}><span className={`${isFeeEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}/></button></div>
         {isFeeEnabled && (
             <div className="animate-fade-in space-y-4">

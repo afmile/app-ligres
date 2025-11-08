@@ -92,13 +92,14 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, onMouseDown, isDrag
 
   return (
     <div
-      className={`absolute w-14 h-16 -translate-x-1/2 -translate-y-1/2 select-none group transition-transform duration-150 ${
+      className={`absolute w-14 h-16 -translate-x-1/2 -translate-y-1/2 select-none group transition-transform duration-150 animate-pop-in ${
         isDragging ? 'cursor-grabbing scale-110 z-10' : 'cursor-grab'
       }`}
       style={{
         left: `${player.x}%`,
         top: `${player.y}%`,
-        touchAction: 'none'
+        touchAction: 'none',
+        animationDelay: `${(player.id - 100) * 20}ms`
       }}
       onMouseDown={(e) => {
         if (!isEditing) {

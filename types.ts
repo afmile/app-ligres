@@ -30,11 +30,14 @@ export interface PositionLayout {
   coordinates: { x: number; y: number };
 }
 
+export type Formation = 'Equilibrada' | 'Ofensiva' | 'Defensiva';
+
 export interface TeamSetup {
     color: TeamColor;
     size: 6 | 7;
     playerNames: Record<string, string>;
     bench: string[];
+    formation: Formation;
 }
 
 export interface Match {

@@ -6,7 +6,7 @@ import SoccerField from './components/SoccerField';
 import History from './components/History';
 import PaymentTracker from './components/PaymentTracker';
 import Help from './components/Help';
-import { DEFAULT_LAYOUT_6_PLAYERS, DEFAULT_LAYOUT_7_PLAYERS, APP_VERSION } from './constants';
+import { LAYOUTS, APP_VERSION } from './constants';
 
 const HISTORY_STORAGE_KEY = 'soccerLineupHistory';
 const CURRENT_MATCH_STATE_KEY = 'currentMatchState';
@@ -16,7 +16,7 @@ const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
     const newBenchPlayers: BenchPlayer[] = [];
     let idCounter = 100;
 
-    const layout1 = team1.size === 6 ? DEFAULT_LAYOUT_6_PLAYERS : DEFAULT_LAYOUT_7_PLAYERS;
+    const layout1 = LAYOUTS[team1.size][team1.formation];
     layout1.forEach((posLayout) => {
       newPlayers.push({
         id: idCounter++,
@@ -34,7 +34,7 @@ const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
         }
     });
 
-    const layout2 = team2.size === 6 ? DEFAULT_LAYOUT_6_PLAYERS : DEFAULT_LAYOUT_7_PLAYERS;
+    const layout2 = LAYOUTS[team2.size][team2.formation];
     layout2.forEach((posLayout) => {
       newPlayers.push({
         id: idCounter++,
@@ -234,6 +234,7 @@ function App() {
 
     const formatTeam = (teamSetup: TeamSetup) => {
         let teamText = `--- EQUIPO ${teamSetup.color.toUpperCase()} ---\n`;
+        teamText += `Formación: ${teamSetup.formation}\n`;
         teamText += "Titulares:\n";
         Object.entries(teamSetup.playerNames).forEach(([pos, name]) => {
             teamText += `- ${name} (${pos})\n`;

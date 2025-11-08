@@ -26,11 +26,11 @@ const AccordionItem: React.FC<AccordionItemProps> = ({ title, children }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
-            {isOpen && (
-                <div className="px-2 pb-4 text-gray-300 space-y-2 animate-fade-in">
+            <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[1000px]' : 'max-h-0'}`}>
+                <div className="px-2 pt-2 pb-4 text-gray-300 space-y-2">
                     {children}
                 </div>
-            )}
+            </div>
         </div>
     );
 };
