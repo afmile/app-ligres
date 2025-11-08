@@ -1,13 +1,12 @@
-
-
 import React, { useState, useEffect } from 'react';
-import { Player, TeamSetup, BenchPlayer, Match } from './types';
+import { Player, TeamSetup, BenchPlayer, Match, Roster } from './types';
 import PlayerSetup from './components/PlayerSetup';
 import SoccerField from './components/SoccerField';
 import History from './components/History';
 import PaymentTracker from './components/PaymentTracker';
 import Help from './components/Help';
-import { LAYOUTS, APP_VERSION } from './constants';
+import RosterManager from './components/RosterManager';
+import { LAYOUTS, APP_VERSION, ROSTER_STORAGE_KEY } from './constants';
 
 const HISTORY_STORAGE_KEY = 'soccerLineupHistory';
 const CURRENT_MATCH_STATE_KEY = 'currentMatchState';
@@ -17,7 +16,7 @@ const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
     const newBenchPlayers: BenchPlayer[] = [];
     let idCounter = 100;
 
-    const layout1 = LAYOUTS[team1.size][team1.formation];
+    const layout1 = LAYOUTS[team1.size];
     layout1.forEach((posLayout) => {
       newPlayers.push({
         id: idCounter++,
@@ -35,7 +34,7 @@ const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
         }
     });
 
-    const layout2 = LAYOUTS[team2.size][team2.formation];
+    const layout2 = LAYOUTS[team2.size];
     layout2.forEach((posLayout) => {
       newPlayers.push({
         id: idCounter++,
@@ -57,7 +56,7 @@ const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
 };
 
 function App() {
-  const [view, setView] = useState<'setup' | 'field' | 'history' | 'payment' | 'help'>('setup');
+  const [view, setView] = useState<'setup' | 'field' | 'history' | 'payment' | 'help' | 'rosters'>('setup');
   const [players, setPlayers] = useState<Player[]>([]);
   const [benchPlayers, setBenchPlayers] = useState<BenchPlayer[]>([]);
   const [matchInfo, setMatchInfo] = useState<{location: string, date: string} | null>(null);
@@ -66,6 +65,7 @@ function App() {
   const [feePerPlayer, setFeePerPlayer] = useState<number | undefined>();
   const [playerPayments, setPlayerPayments] = useState<Record<number, boolean>>({});
   const [currentMatchId, setCurrentMatchId] = useState<string | null>(null);
+  const [rosters, setRosters] = useState<Roster[]>([]);
 
 
   useEffect(() => {
@@ -87,6 +87,11 @@ function App() {
       const storedHistory = localStorage.getItem(HISTORY_STORAGE_KEY);
       if (storedHistory) {
         setHistory(JSON.parse(storedHistory));
+      }
+      
+      const storedRosters = localStorage.getItem(ROSTER_STORAGE_KEY);
+      if (storedRosters) {
+        setRosters(JSON.parse(storedRosters));
       }
     } catch (error) {
       console.error("Failed to load data from localStorage:", error);
@@ -258,7 +263,6 @@ function App() {
 
     const formatTeam = (teamSetup: TeamSetup) => {
         let teamText = `--- EQUIPO ${teamSetup.color.toUpperCase()} ---\n`;
-        teamText += `Formación: ${teamSetup.formation}\n`;
         teamText += "Titulares:\n";
         Object.entries(teamSetup.playerNames).forEach(([pos, name]) => {
             teamText += `- ${name} (${pos})\n`;
@@ -288,7 +292,6 @@ function App() {
     }
 
     const blob = new Blob([text], { type: 'text/plain' });
-    // FIX: Changed URL.ObjectURL to URL.createObjectURL
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
 a.href = url;
@@ -297,6 +300,25 @@ a.href = url;
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+  
+  const handleSaveRoster = (roster: Roster) => {
+    const existingIndex = rosters.findIndex(r => r.id === roster.id);
+    let updatedRosters;
+    if (existingIndex > -1) {
+        updatedRosters = [...rosters];
+        updatedRosters[existingIndex] = roster;
+    } else {
+        updatedRosters = [...rosters, roster];
+    }
+    setRosters(updatedRosters);
+    localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(updatedRosters));
+  };
+  
+  const handleDeleteRoster = (rosterId: string) => {
+      const updatedRosters = rosters.filter(r => r.id !== rosterId);
+      setRosters(updatedRosters);
+      localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(updatedRosters));
   };
 
   const renderView = () => {
@@ -344,26 +366,43 @@ a.href = url;
         );
       case 'help':
         return <Help onBack={() => setView('setup')} />;
+      case 'rosters':
+        return (
+          <RosterManager
+            rosters={rosters}
+            onSaveRoster={handleSaveRoster}
+            onDeleteRoster={handleDeleteRoster}
+            onBack={() => setView('setup')}
+          />
+        );
       case 'setup':
       default:
-        return <PlayerSetup onSetupComplete={handleSetupComplete} history={history} onShowHistory={() => setView('history')} />;
+        return (
+            <PlayerSetup
+                onSetupComplete={handleSetupComplete}
+                history={history}
+                onShowHistory={() => setView('history')}
+                rosters={rosters}
+                onShowRosters={() => setView('rosters')}
+            />
+        );
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen bg-background text-text-primary flex flex-col items-center p-4 sm:p-6 md:p-8">
       <header className="w-full max-w-7xl text-center mb-6">
-        <h1 className="text-4xl sm:text-5xl font-bold text-green-400">Organizador Táctico Ligres</h1>
-        <p className="text-gray-400 mt-2">Define tus alineaciones, gestiona tu banca y comparte tu estrategia.</p>
+        <h1 className="text-4xl sm:text-5xl font-bold text-primary">Organizador Táctico Ligres</h1>
+        <p className="text-text-secondary mt-2">Define tus alineaciones, gestiona tu banca y comparte tu estrategia.</p>
       </header>
 
       <main className="w-full max-w-7xl flex-grow">
         {renderView()}
       </main>
-      <footer className="w-full max-w-7xl text-center mt-8 text-gray-500 text-sm">
+      <footer className="w-full max-w-7xl text-center mt-8 text-text-secondary/75 text-sm">
         <p>Creado por AFML</p>
-        <p className="text-xs text-gray-600 mt-1">Versión {APP_VERSION}</p>
-        <button onClick={() => setView('help')} className="mt-2 text-gray-400 hover:text-green-400 transition-colors">
+        <p className="text-xs mt-1">Versión {APP_VERSION}</p>
+        <button onClick={() => setView('help')} className="mt-2 text-text-secondary hover:text-primary transition-colors">
             Ayuda
         </button>
       </footer>

@@ -8,13 +8,11 @@ interface PlayerMarkerProps {
   onUpdateName: (id: number, newName: string) => void;
 }
 
-const JerseyIcon: React.FC<{ color: string; teamId: Player['teamId']; className?: string }> = ({
+const JerseyIcon: React.FC<{ color: string; strokeColor: string; className?: string }> = ({
   color,
-  teamId,
+  strokeColor,
   className,
 }) => {
-  const strokeColor = teamId === 'black' ? '#6B7280' : '#111827'; // gray-500 vs gray-900
-
   return (
     <svg
       viewBox="0 0 24 24"
@@ -49,12 +47,13 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, onMouseDown, isDrag
   const inputRef = useRef<HTMLInputElement>(null);
 
   const teamColors = {
-      red: '#DC2626', // red-600
-      blue: '#2563EB', // blue-600
+      red: '#EF4444', // error
+      blue: '#3A7BFF', // secondary
       black: '#1F2937', // gray-800
       white: '#F9FAFB' // gray-50
   };
   const jerseyColor = teamColors[player.teamId];
+  const strokeColor = player.teamId === 'white' ? '#111A2E' : '#E5E9F0';
   
   const handleNameClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent drag from starting
@@ -117,7 +116,7 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, onMouseDown, isDrag
       <div className="relative w-full h-full flex flex-col items-center justify-start filter drop-shadow-lg">
         <JerseyIcon 
             color={jerseyColor}
-            teamId={player.teamId}
+            strokeColor={strokeColor}
             className="w-11 h-11"
         />
         <div className="w-full text-center -mt-1">
@@ -130,12 +129,12 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, onMouseDown, isDrag
               onBlur={handleNameChangeCommit}
               onKeyDown={handleKeyDown}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-gray-900/80 text-white text-center text-xs font-bold rounded-md py-0.5 px-1 border border-green-500 outline-none shadow-inner"
+              className="w-full bg-background/80 text-text-primary text-center text-xs font-bold rounded-md py-0.5 px-1 border border-primary outline-none shadow-inner"
             />
           ) : (
             <span
               onClick={handleNameClick}
-              className={`text-xs font-bold px-1.5 py-0.5 rounded-md transition-colors text-white uppercase hover:bg-black/50 cursor-pointer`}
+              className={`text-xs font-bold px-1.5 py-0.5 rounded-md transition-colors text-text-primary uppercase hover:bg-black/50 cursor-pointer`}
             >
               {player.name}
             </span>

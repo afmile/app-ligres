@@ -23,15 +23,15 @@ const VerticalFieldLinesSVG = () => (
       preserveAspectRatio="none"
     >
       <defs>
-        <style>{`.line{stroke:#a3a3a3;stroke-opacity:0.6;stroke-width:3;fill:none;}`}</style>
+        <style>{`.line{stroke:#9AA3B0;stroke-opacity:0.6;stroke-width:3;fill:none;}`}</style>
       </defs>
       <rect x="1.5" y="1.5" width="497" height="797" className="line" />
       <path d="M0 400 H500 M250 400 m-70 0 a70 70 0 1 0 140 0 a70 70 0 1 0 -140 0" className="line" />
-      <circle cx="250" cy="400" r="4" fill="#a3a3a3" fillOpacity="0.6" />
+      <circle cx="250" cy="400" r="4" fill="#9AA3B0" fillOpacity="0.6" />
       <path d="M90 0 V130 H410 V0 M90 800 V670 H410 V800" className="line" />
       <path d="M180 0 V45 H320 V0 M180 800 V755 H320 V800" className="line" />
-      <circle cx="250" cy="90" r="3" fill="#a3a3a3" fillOpacity="0.6" />
-      <circle cx="250" cy="710" r="3" fill="#a3a3a3" fillOpacity="0.6" />
+      <circle cx="250" cy="90" r="3" fill="#9AA3B0" fillOpacity="0.6" />
+      <circle cx="250" cy="710" r="3" fill="#9AA3B0" fillOpacity="0.6" />
       <path d="M180 130 A 70 60 0 0 0 320 130" className="line" />
       <path d="M180 670 A 70 60 0 0 1 320 670" className="line" />
     </svg>
@@ -39,20 +39,22 @@ const VerticalFieldLinesSVG = () => (
 
 const BenchList: React.FC<{ title: string; players: BenchPlayer[], teamColor: TeamColor, className?: string }> = ({ title, players, teamColor, className = '' }) => {
     const teamColorClasses: Record<TeamColor, string> = {
-        red: 'bg-red-800/70 border-red-600',
-        blue: 'bg-blue-800/70 border-blue-600',
-        black: 'bg-gray-800/70 border-gray-600',
+        red: 'bg-error/20 border-error',
+        blue: 'bg-secondary/20 border-secondary',
+        black: 'bg-surface/70 border-gray-600',
         white: 'bg-gray-200/70 border-gray-400 text-black',
     };
 
     if (players.length === 0) return null;
 
     return (
-        <div className={`rounded-lg overflow-hidden border-2 shadow-md ${teamColorClasses[teamColor]} ${className}`}>
-            <h3 className={`text-center font-bold p-2 text-sm`}>{title}</h3>
-            <ul className="p-2 space-y-1">
-                {players.map(p => <li key={p.id} className="font-semibold truncate text-sm">{p.name}</li>)}
-            </ul>
+        <div className={className}>
+            <h3 className={`text-center font-bold text-sm mb-2 text-text-secondary`}>{title}</h3>
+            <div className={`rounded-lg overflow-hidden border-2 shadow-md ${teamColorClasses[teamColor]} h-full`}>
+                <ul className="p-2 space-y-1">
+                    {players.map(p => <li key={p.id} className="font-semibold truncate text-sm">{p.name}</li>)}
+                </ul>
+            </div>
         </div>
     );
 };
@@ -162,7 +164,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
 
     try {
         const canvas = await html2canvas(exportElement, {
-            backgroundColor: '#111827',
+            backgroundColor: '#0A0F1E',
             scale: 2,
             logging: false,
             useCORS: true,
@@ -209,15 +211,15 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
         {/* Off-screen container for image export */}
         <div
             ref={exportRef}
-            className="absolute -top-[9999px] -left-[9999px] w-[500px] bg-gray-900 p-4 flex flex-col aspect-[4/5] font-sans"
+            className="absolute -top-[9999px] -left-[9999px] w-[500px] bg-background p-4 flex flex-col aspect-[4/5] font-sans"
         >
             {matchInfo && (
-                <div className="w-full text-center mb-4 px-3 py-2">
-                    <p className="font-bold text-2xl text-green-400">{matchInfo.location}</p>
-                    <p className="text-lg text-gray-300">{capitalizedDate}</p>
+                <div className="w-full text-center mb-4 px-3 py-2 text-text-primary">
+                    <p className="font-bold text-2xl text-primary">{matchInfo.location}</p>
+                    <p className="text-lg text-text-secondary">{capitalizedDate}</p>
                 </div>
             )}
-            <div className="relative w-full h-full bg-green-700 rounded-lg shadow-2xl border-4 border-gray-600 overflow-hidden">
+            <div className="relative w-full h-full bg-field rounded-lg shadow-2xl border-4 border-surface overflow-hidden">
                 <VerticalFieldLinesSVG />
                 {players.map(player => (
                     <PlayerMarker
@@ -232,19 +234,19 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
         </div>
 
         {/* Visible UI for interaction */}
-        <div className="w-full sm:max-w-sm md:max-w-md lg:max-w-2xl bg-gray-900 p-2 lg:p-4">
+        <div className="w-full sm:max-w-sm md:max-w-md lg:max-w-2xl bg-background p-2 lg:p-4">
             {matchInfo && (
-                <div className="w-full text-center mb-4 p-3 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
+                <div className="w-full text-center mb-4 p-3 bg-surface rounded-lg border border-secondary/20 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
                     <div className="text-center sm:text-left">
-                        <p className="font-bold text-lg text-green-400">{matchInfo.location}</p>
-                        <p className="text-sm text-gray-300">{capitalizedDate}</p>
+                        <p className="font-bold text-lg text-primary">{matchInfo.location}</p>
+                        <p className="text-sm text-text-secondary">{capitalizedDate}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <a 
                             href={calendarUrl}
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-md text-sm flex items-center justify-center gap-2 transition-colors"
+                            className="bg-secondary hover:bg-blue-400 text-white font-semibold px-4 py-2 rounded-md text-sm flex items-center justify-center gap-2 transition-colors"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>
                             <span>Añadir al calendario</span>
@@ -253,7 +255,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
                             href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(matchInfo.location)}`}
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-md text-sm flex items-center justify-center gap-2 transition-colors"
+                            className="bg-secondary hover:bg-blue-400 text-white font-semibold px-4 py-2 rounded-md text-sm flex items-center justify-center gap-2 transition-colors"
                         >
                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
                             <span>Cómo llegar</span>
@@ -271,7 +273,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
                  )}
                 <div 
                     ref={fieldRef}
-                    className="relative w-full bg-green-700 rounded-lg shadow-2xl border-4 border-gray-600 overflow-hidden aspect-[1/2]"
+                    className="relative w-full bg-field rounded-lg shadow-2xl border-4 border-surface overflow-hidden aspect-[1/2]"
                 >
                     <VerticalFieldLinesSVG />
                     {players.map(player => (
@@ -296,7 +298,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
             <div className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-2xl mt-4">
                 <button 
                     onClick={onGoToPayments}
-                    className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2"
+                    className="w-full bg-secondary text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-400 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2"
                 >
                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M8.433 7.418c.158-.103.346-.195.574-.277a6.213 6.213 0 012.218 0c.228.082.416.174.574.277a3.413 3.413 0 011.698 2.825c0 .363-.043.71-.128 1.045A3.99 3.99 0 0112 13.5a3.99 3.99 0 01-1.789-1.212A4.02 4.02 0 0110 13.5a4.02 4.02 0 01-.211.005 3.99 3.99 0 01-1.789 1.212 3.99 3.99 0 01-1.212.212c-.733 0-1.42-.231-1.99-.637a4.026 4.026 0 01-1.045-.128C3.043 11.95 3 11.603 3 11.24c0-1.12.503-2.164 1.302-2.825a3.413 3.413 0 011.698-2.825z" />
@@ -309,7 +311,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
         <div className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-2xl flex flex-col sm:flex-row items-center gap-4 mt-4">
             <button 
                 onClick={onReset}
-                className="w-full sm:flex-1 bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2"
+                className="w-full sm:flex-1 bg-error text-white font-bold py-3 px-6 rounded-lg hover:bg-red-500 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M7.793 2.232a.75.75 0 0 1-.026 1.06L3.636 7.25h6.114a4.25 4.25 0 0 1 0 8.5H8a.75.75 0 0 1 0-1.5h1.75a2.75 2.75 0 0 0 0-5.5H3.636l4.131 3.958a.75.75 0 1 1-1.036 1.084l-5.5-5.25a.75.75 0 0 1 0-1.084l5.5-5.25a.75.75 0 0 1 1.06.026Z" clipRule="evenodd" />
@@ -319,7 +321,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
             <button 
                 onClick={handleShareImage}
                 disabled={isExporting}
-                className="w-full sm:flex-1 bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2 disabled:bg-gray-500 disabled:cursor-wait"
+                className="w-full sm:flex-1 bg-secondary text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-400 transition-colors duration-300 shadow-lg flex items-center justify-center space-x-2 disabled:bg-surface/50 disabled:text-text-secondary disabled:cursor-wait"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
