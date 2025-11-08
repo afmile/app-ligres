@@ -3,7 +3,8 @@ import { Player } from '../types';
 
 interface PlayerMarkerProps {
   player: Player;
-  onMouseDown: (id: number) => void;
+  isTopTeam: boolean;
+  onMouseDown: (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => void;
   isDragging: boolean;
   onUpdateName: (id: number, newName: string) => void;
 }
@@ -41,7 +42,7 @@ const JerseyIcon: React.FC<{ color: string; strokeColor: string; className?: str
 };
 
 
-const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, onMouseDown, isDragging, onUpdateName }) => {
+const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, isTopTeam, onMouseDown, isDragging, onUpdateName }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(player.name);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -89,9 +90,28 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, onMouseDown, isDrag
     setEditedName(player.name);
   }, [player.name]);
 
+  const getNameClasses = () => {
+    const baseClassesWithBg = 'text-xs font-bold px-1 py-0.5 rounded-md transition-colors uppercase cursor-pointer';
+    const baseClassesWithoutBg = 'text-xs font-bold uppercase cursor-pointer';
+
+    if (isTopTeam) { // Top team (visitor) always has a background
+        if (player.teamId === 'white') {
+            return `${baseClassesWithBg} bg-black/75 text-text-primary`;
+        }
+        return `${baseClassesWithBg} bg-white/75 text-black`;
+    }
+    
+    // Bottom team (home) has no background
+    if (player.teamId === 'white') {
+        return `${baseClassesWithoutBg} text-black`;
+    }
+    // Add a drop shadow to white text for better readability on the green field with white lines
+    return `${baseClassesWithoutBg} text-text-primary [text-shadow:0_1px_2px_rgba(0,0,0,0.7)]`;
+  };
+
   return (
     <div
-      className={`absolute w-14 h-16 -translate-x-1/2 -translate-y-1/2 select-none group transition-transform duration-150 animate-pop-in ${
+      className={`absolute w-12 h-14 -translate-x-1/2 -translate-y-1/2 select-none group transition-transform duration-150 animate-pop-in ${
         isDragging ? 'cursor-grabbing scale-110 z-10' : 'cursor-grab'
       }`}
       style={{
@@ -103,13 +123,13 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, onMouseDown, isDrag
       onMouseDown={(e) => {
         if (!isEditing) {
             e.preventDefault();
-            onMouseDown(player.id);
+            onMouseDown(e);
         }
       }}
       onTouchStart={(e) => {
         if (!isEditing) {
             e.preventDefault();
-            onMouseDown(player.id);
+            onMouseDown(e);
         }
       }}
     >
@@ -117,7 +137,7 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, onMouseDown, isDrag
         <JerseyIcon 
             color={jerseyColor}
             strokeColor={strokeColor}
-            className="w-11 h-11"
+            className="w-10 h-10"
         />
         <div className="w-full text-center -mt-1">
           {isEditing ? (
@@ -134,7 +154,7 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, onMouseDown, isDrag
           ) : (
             <span
               onClick={handleNameClick}
-              className={`text-xs font-bold px-1.5 py-0.5 rounded-md transition-colors text-text-primary uppercase hover:bg-black/50 cursor-pointer`}
+              className={getNameClasses()}
             >
               {player.name}
             </span>

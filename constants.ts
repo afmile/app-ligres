@@ -1,7 +1,6 @@
 import { PositionLayout, PositionName } from './types';
 
 export const APP_VERSION = '1.1.0';
-export const ROSTER_STORAGE_KEY = 'soccerRosters';
 
 export const POSITIONS_6_PLAYERS: PositionName[] = [
   'Portero',

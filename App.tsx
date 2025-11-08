@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Player, TeamSetup, BenchPlayer, Match, Roster } from './types';
+import { Player, TeamSetup, BenchPlayer, Match } from './types';
 import PlayerSetup from './components/PlayerSetup';
 import SoccerField from './components/SoccerField';
 import History from './components/History';
 import PaymentTracker from './components/PaymentTracker';
 import Help from './components/Help';
-import RosterManager from './components/RosterManager';
-import { LAYOUTS, APP_VERSION, ROSTER_STORAGE_KEY } from './constants';
+import { LAYOUTS, APP_VERSION } from './constants';
 
 const HISTORY_STORAGE_KEY = 'soccerLineupHistory';
 const CURRENT_MATCH_STATE_KEY = 'currentMatchState';
@@ -16,6 +15,8 @@ const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
     const newBenchPlayers: BenchPlayer[] = [];
     let idCounter = 100;
 
+    // Team 1 (Bottom half, attacking "up")
+    // Maps layout Y (0-100) to field Y (51-95)
     const layout1 = LAYOUTS[team1.size];
     layout1.forEach((posLayout) => {
       newPlayers.push({
@@ -23,7 +24,7 @@ const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
         name: team1.playerNames[posLayout.position] || `Jugador ${idCounter}`,
         position: posLayout.position,
         x: posLayout.coordinates.x,
-        y: 50 + (posLayout.coordinates.y / 2),
+        y: 51 + (posLayout.coordinates.y / 100 * 44),
         teamId: team1.color,
       });
     });
@@ -34,6 +35,8 @@ const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
         }
     });
 
+    // Team 2 (Top half, attacking "down")
+    // Maps layout Y (0-100) to field Y (5-49), mirrored
     const layout2 = LAYOUTS[team2.size];
     layout2.forEach((posLayout) => {
       newPlayers.push({
@@ -41,7 +44,7 @@ const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
         name: team2.playerNames[posLayout.position] || `Jugador ${idCounter}`,
         position: posLayout.position,
         x: 100 - posLayout.coordinates.x,
-        y: (100 - posLayout.coordinates.y) / 2,
+        y: 5 + ((100 - posLayout.coordinates.y) / 100 * 44),
         teamId: team2.color,
       });
     });
@@ -56,7 +59,7 @@ const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
 };
 
 function App() {
-  const [view, setView] = useState<'setup' | 'field' | 'history' | 'payment' | 'help' | 'rosters'>('setup');
+  const [view, setView] = useState<'setup' | 'field' | 'history' | 'payment' | 'help'>('setup');
   const [players, setPlayers] = useState<Player[]>([]);
   const [benchPlayers, setBenchPlayers] = useState<BenchPlayer[]>([]);
   const [matchInfo, setMatchInfo] = useState<{location: string, date: string} | null>(null);
@@ -65,7 +68,6 @@ function App() {
   const [feePerPlayer, setFeePerPlayer] = useState<number | undefined>();
   const [playerPayments, setPlayerPayments] = useState<Record<number, boolean>>({});
   const [currentMatchId, setCurrentMatchId] = useState<string | null>(null);
-  const [rosters, setRosters] = useState<Roster[]>([]);
 
 
   useEffect(() => {
@@ -89,10 +91,6 @@ function App() {
         setHistory(JSON.parse(storedHistory));
       }
       
-      const storedRosters = localStorage.getItem(ROSTER_STORAGE_KEY);
-      if (storedRosters) {
-        setRosters(JSON.parse(storedRosters));
-      }
     } catch (error) {
       console.error("Failed to load data from localStorage:", error);
     } finally {
@@ -302,25 +300,6 @@ a.href = url;
     URL.revokeObjectURL(url);
   };
   
-  const handleSaveRoster = (roster: Roster) => {
-    const existingIndex = rosters.findIndex(r => r.id === roster.id);
-    let updatedRosters;
-    if (existingIndex > -1) {
-        updatedRosters = [...rosters];
-        updatedRosters[existingIndex] = roster;
-    } else {
-        updatedRosters = [...rosters, roster];
-    }
-    setRosters(updatedRosters);
-    localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(updatedRosters));
-  };
-  
-  const handleDeleteRoster = (rosterId: string) => {
-      const updatedRosters = rosters.filter(r => r.id !== rosterId);
-      setRosters(updatedRosters);
-      localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(updatedRosters));
-  };
-
   const renderView = () => {
     if (!isInitialized) return null; // Or a loading spinner
 
@@ -366,15 +345,6 @@ a.href = url;
         );
       case 'help':
         return <Help onBack={() => setView('setup')} />;
-      case 'rosters':
-        return (
-          <RosterManager
-            rosters={rosters}
-            onSaveRoster={handleSaveRoster}
-            onDeleteRoster={handleDeleteRoster}
-            onBack={() => setView('setup')}
-          />
-        );
       case 'setup':
       default:
         return (
@@ -382,8 +352,6 @@ a.href = url;
                 onSetupComplete={handleSetupComplete}
                 history={history}
                 onShowHistory={() => setView('history')}
-                rosters={rosters}
-                onShowRosters={() => setView('rosters')}
             />
         );
     }

@@ -47,6 +47,7 @@ export interface Match {
   playerPayments?: Record<number, boolean>;
 }
 
+// FIX: Add missing Roster type.
 export interface Roster {
   id: string;
   name: string;

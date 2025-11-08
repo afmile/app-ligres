@@ -64,16 +64,8 @@ const Help: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                         <li><strong>Editar Nombres:</strong> Haz clic sobre el nombre de un jugador para editarlo directamente en la cancha. Presiona 'Enter' o haz clic fuera para guardar.</li>
                     </ul>
                 </AccordionItem>
-                
-                 <AccordionItem title="3. Gestión de Plantillas (¡Nuevo!)">
-                    <p>Para no tener que escribir los mismos nombres siempre, ahora puedes guardar listas de jugadores:</p>
-                     <ul className="list-disc list-inside ml-4 space-y-1">
-                        <li><strong>Administrar:</strong> En la pantalla de configuración, haz clic en el botón "Plantillas" para abrir el gestor. Aquí puedes crear nuevas plantillas, editar sus nombres, añadir o quitar jugadores, o eliminarlas.</li>
-                        <li><strong>Cargar Rápido:</strong> Al configurar un equipo, haz clic en el ícono de grupo (al lado de "Jugadores") para desplegar tus plantillas guardadas. Al seleccionar una, se llenarán automáticamente los campos de titulares y suplentes.</li>
-                    </ul>
-                </AccordionItem>
 
-                <AccordionItem title="4. ¿Cómo funcionan las opciones para compartir?">
+                <AccordionItem title="3. ¿Cómo funcionan las opciones para compartir?">
                     <p>La aplicación ofrece tres formas distintas de compartir la información del partido, cada una con un propósito diferente:</p>
                     <div className="space-y-4 mt-2">
                         <div className="bg-background/50 p-3 rounded-lg shadow-md">
@@ -91,7 +83,7 @@ const Help: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     </div>
                 </AccordionItem>
 
-                <AccordionItem title="5. Integración con Calendario y Mapas">
+                <AccordionItem title="4. Integración con Calendario y Mapas">
                     <p>En la pantalla de la cancha, encontrarás botones para:</p>
                      <ul className="list-disc list-inside ml-4 space-y-1">
                         <li><strong>Añadir al calendario:</strong> Crea un evento en tu Google Calendar con los detalles del partido para que no lo olvides.</li>
@@ -99,7 +91,7 @@ const Help: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     </ul>
                 </AccordionItem>
                 
-                 <AccordionItem title="6. Historial de Partidos">
+                 <AccordionItem title="5. Historial de Partidos">
                     <p>Cada vez que completas una configuración, el partido se guarda automáticamente en tu historial. Desde allí puedes:</p>
                      <ul className="list-disc list-inside ml-4 space-y-1">
                         <li><strong>Cargar:</strong> Restaura una alineación y su información de un partido anterior.</li>

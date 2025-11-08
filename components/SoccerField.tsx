@@ -64,6 +64,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
   const fieldRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
   const [activePlayerId, setActivePlayerId] = useState<number | null>(null);
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   
   const team1 = players.find(p => p.y > 50);
@@ -105,32 +106,69 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
     return `https://www.google.com/calendar/render?${params.toString()}`;
   }, [matchInfo]);
 
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>, id: number) => {
+    setActivePlayerId(id);
+    if (!fieldRef.current) return;
+  
+    const fieldRect = fieldRef.current.getBoundingClientRect();
+    const player = players.find(p => p.id === id);
+    if (!player) return;
+  
+    // Player's current center in pixels, relative to the field
+    const playerXpx = (player.x / 100) * fieldRect.width;
+    const playerYpx = (player.y / 100) * fieldRect.height;
+  
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+  
+    // Mouse position in pixels, relative to the field
+    const mouseXpx = clientX - fieldRect.left;
+    const mouseYpx = clientY - fieldRect.top;
+  
+    // Calculate and store the offset from the player's center to the mouse click
+    setDragOffset({
+      x: mouseXpx - playerXpx,
+      y: mouseYpx - playerYpx,
+    });
+  };
 
   const handleMouseMove = useCallback((event: MouseEvent | TouchEvent) => {
-    if (activePlayerId === null || !fieldRef.current) return;
+    if (activePlayerId === null || !fieldRef.current || !dragOffset) return;
     
+    event.preventDefault();
+
     const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
     const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
 
     const fieldRect = fieldRef.current.getBoundingClientRect();
-    const x = ((clientX - fieldRect.left) / fieldRect.width) * 100;
-    const y = ((clientY - fieldRect.top) / fieldRect.height) * 100;
+    
+    // Current mouse position in pixels relative to the field
+    const mouseXpx = clientX - fieldRect.left;
+    const mouseYpx = clientY - fieldRect.top;
+
+    // Subtract the offset to find the new player center
+    const newPlayerXpx = mouseXpx - dragOffset.x;
+    const newPlayerYpx = mouseYpx - dragOffset.y;
+    
+    const x = (newPlayerXpx / fieldRect.width) * 100;
+    const y = (newPlayerYpx / fieldRect.height) * 100;
 
     const constrainedX = Math.max(0, Math.min(100, x));
     const constrainedY = Math.max(0, Math.min(100, y));
 
     updatePlayerPosition(activePlayerId, constrainedX, constrainedY);
-  }, [activePlayerId, updatePlayerPosition]);
+  }, [activePlayerId, updatePlayerPosition, dragOffset]);
 
   const handleMouseUp = useCallback(() => {
     setActivePlayerId(null);
+    setDragOffset(null);
   }, []);
 
   useEffect(() => {
     if (activePlayerId !== null) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
-      window.addEventListener('touchmove', handleMouseMove);
+      window.addEventListener('touchmove', handleMouseMove, { passive: false });
       window.addEventListener('touchend', handleMouseUp);
     } else {
       window.removeEventListener('mousemove', handleMouseMove);
@@ -146,10 +184,6 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
       window.removeEventListener('touchend', handleMouseUp);
     };
   }, [activePlayerId, handleMouseMove, handleMouseUp]);
-
-  const handleMouseDown = (id: number) => {
-    setActivePlayerId(id);
-  };
   
   const handleShareImage = async () => {
     const exportElement = exportRef.current;
@@ -211,7 +245,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
         {/* Off-screen container for image export */}
         <div
             ref={exportRef}
-            className="absolute -top-[9999px] -left-[9999px] w-[500px] bg-background p-4 flex flex-col aspect-[4/5] font-sans"
+            className="absolute -top-[9999px] -left-[9999px] w-[500px] h-[800px] bg-background p-4 flex flex-col font-sans"
         >
             {matchInfo && (
                 <div className="w-full text-center mb-4 px-3 py-2 text-text-primary">
@@ -225,6 +259,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
                     <PlayerMarker
                         key={player.id}
                         player={player}
+                        isTopTeam={player.y <= 50}
                         onMouseDown={() => {}}
                         isDragging={false}
                         onUpdateName={() => {}}
@@ -273,14 +308,15 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
                  )}
                 <div 
                     ref={fieldRef}
-                    className="relative w-full bg-field rounded-lg shadow-2xl border-4 border-surface overflow-hidden aspect-[1/2]"
+                    className="relative w-full bg-field rounded-lg shadow-2xl border-4 border-surface overflow-hidden aspect-[5/8]"
                 >
                     <VerticalFieldLinesSVG />
                     {players.map(player => (
                         <PlayerMarker
                             key={player.id}
                             player={player}
-                            onMouseDown={handleMouseDown}
+                            isTopTeam={player.y <= 50}
+                            onMouseDown={(e) => handleMouseDown(e, player.id)}
                             isDragging={activePlayerId === player.id}
                             onUpdateName={updatePlayerName}
                         />

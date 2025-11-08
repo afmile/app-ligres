@@ -1,13 +1,11 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { POSITIONS_6_PLAYERS, POSITIONS_7_PLAYERS } from '../constants';
-import { PositionName, TeamColor, TeamSetup, Match, Roster } from '../types';
+import { PositionName, TeamColor, TeamSetup, Match } from '../types';
 
 interface PlayerSetupProps {
   onSetupComplete: (team1: TeamSetup, team2: TeamSetup, location: string, date: string, feePerPlayer?: number) => void;
   history: Match[];
   onShowHistory: () => void;
-  rosters: Roster[];
-  onShowRosters: () => void;
 }
 
 const ALL_COLORS: TeamColor[] = ['red', 'blue', 'black', 'white'];
@@ -24,8 +22,6 @@ const TeamForm: React.FC<{
   isBenchEnabled: boolean;
   benchNames: string[];
   setBenchNames: (names: string[]) => void;
-  rosters: Roster[];
-  onApplyRoster: (roster: Roster) => void;
 }> = ({
   teamLabel,
   teamColor,
@@ -37,13 +33,9 @@ const TeamForm: React.FC<{
   isBenchEnabled,
   benchNames,
   setBenchNames,
-  rosters,
-  onApplyRoster,
 }) => {
   const buttonContainerRef = useRef<HTMLDivElement>(null);
   const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({ opacity: 0 });
-  const [isRosterPopoverOpen, setIsRosterPopoverOpen] = useState(false);
-  const rosterButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (buttonContainerRef.current) {
@@ -59,16 +51,6 @@ const TeamForm: React.FC<{
       }
     }
   }, [teamColor]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (isRosterPopoverOpen && rosterButtonRef.current && !rosterButtonRef.current.contains(event.target as Node)) {
-        setIsRosterPopoverOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isRosterPopoverOpen]);
   
   const handleNameChange = (position: PositionName, name: string) => {
     setPlayerNames({ ...playerNames, [position]: name });
@@ -136,31 +118,6 @@ const TeamForm: React.FC<{
       <div>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-center flex-grow">Jugadores</h3>
-            <div className="relative">
-                <button 
-                    ref={rosterButtonRef}
-                    type="button" 
-                    onClick={() => setIsRosterPopoverOpen(!isRosterPopoverOpen)}
-                    disabled={rosters.length === 0}
-                    className="p-1.5 text-text-secondary hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Cargar plantilla"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                    </svg>
-                </button>
-                {isRosterPopoverOpen && (
-                    <div className="absolute z-20 right-0 mt-2 w-48 bg-surface border border-secondary/20 rounded-md shadow-lg animate-fade-in">
-                        <ul className="py-1">
-                            {rosters.map(roster => (
-                                <li key={roster.id} onClick={() => { onApplyRoster(roster); setIsRosterPopoverOpen(false); }} className="px-3 py-2 text-sm text-text-secondary hover:bg-background cursor-pointer">
-                                    {roster.name}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-            </div>
           </div>
            <div className="grid grid-cols-1 gap-4">
             {positions.map(position => (
@@ -218,7 +175,7 @@ const TeamForm: React.FC<{
 };
 
 
-const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onShowHistory, rosters, onShowRosters }) => {
+const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onShowHistory }) => {
   const [location, setLocation] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [isMatchInfoLocked, setIsMatchInfoLocked] = useState(false);
@@ -351,26 +308,6 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
     }
   };
 
-  const handleApplyRoster = (roster: Roster, setNames: React.Dispatch<React.SetStateAction<Record<string, string>>>, setBench: React.Dispatch<React.SetStateAction<string[]>>) => {
-      const newNames: Record<string, string> = {};
-      positions.forEach((pos, index) => {
-          newNames[pos] = roster.playerNames[index] || '';
-      });
-      setNames(newNames);
-  
-      if (isBenchEnabled) {
-          const benchPlayers = roster.playerNames.slice(positions.length);
-          const newBench = [...benchPlayers];
-          // Ensure at least 3 bench spots are visible, even if empty
-          while (newBench.length < 3) {
-              newBench.push('');
-          }
-          setBench(newBench);
-      } else {
-          setBench(['','','']);
-      }
-  };
-
   const totalFee = useMemo(() => {
     const fee = Number(feeValue);
     if (!isFeeEnabled || isNaN(fee) || fee <= 0) return 0;
@@ -383,26 +320,28 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
       <div>
         <h3 className="text-xl font-bold text-center text-primary mb-4">Lugar y fecha</h3>
         {!isMatchInfoLocked ? (
-          <div key="match-info-form" className="bg-surface/75 p-6 md:p-8 rounded-xl shadow-2xl border border-secondary/20 animate-fade-in">
-            <div className="space-y-4">
-              <div className="relative">
-                <div className="flex justify-between items-center mb-1">
-                  <label htmlFor="location" className="block text-sm font-medium text-text-secondary">Lugar del Partido</label>
-                  {recentLocations.length > 0 && (
-                    <button type="button" onClick={() => setShowRecentLocations(!showRecentLocations)} className="text-sm text-text-secondary hover:text-text-primary opacity-75 hover:opacity-100 transition-opacity">Lugares recientes</button>
+          <div key="match-info-form" className="animate-fade-in">
+            <div className="bg-surface/75 p-6 md:p-8 rounded-xl shadow-2xl border border-secondary/20">
+              <div className="space-y-4">
+                <div className="relative">
+                  <div className="flex justify-between items-center mb-1">
+                    <label htmlFor="location" className="block text-sm font-medium text-text-secondary">Lugar del Partido</label>
+                    {recentLocations.length > 0 && (
+                      <button type="button" onClick={() => setShowRecentLocations(!showRecentLocations)} className="text-sm text-text-secondary hover:text-text-primary opacity-75 hover:opacity-100 transition-opacity">Lugares recientes</button>
+                    )}
+                  </div>
+                  <input type="text" id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ej: Cancha Los Héroes" className="w-full bg-background border border-secondary/20 rounded-md py-2 px-3 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary shadow-inner" required/>
+                  {showRecentLocations && recentLocations.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-surface border border-secondary/20 rounded-md shadow-lg"><ul className="py-1">{recentLocations.map(loc => (<li key={loc} onClick={() => { setLocation(loc); setShowRecentLocations(false); }} className="px-3 py-2 text-sm text-text-secondary hover:bg-background cursor-pointer">{loc}</li>))}</ul></div>
                   )}
                 </div>
-                <input type="text" id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ej: Cancha Los Héroes" className="w-full bg-background border border-secondary/20 rounded-md py-2 px-3 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary shadow-inner" required/>
-                {showRecentLocations && recentLocations.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-surface border border-secondary/20 rounded-md shadow-lg"><ul className="py-1">{recentLocations.map(loc => (<li key={loc} onClick={() => { setLocation(loc); setShowRecentLocations(false); }} className="px-3 py-2 text-sm text-text-secondary hover:bg-background cursor-pointer">{loc}</li>))}</ul></div>
-                )}
-              </div>
-              <div>
-                <div className="flex justify-between items-baseline mb-1">
-                  <label htmlFor="date" className="block text-sm font-medium text-text-secondary">Fecha</label>
-                  <p className="text-text-secondary text-sm">{formattedDate}</p>
+                <div>
+                  <div className="flex justify-between items-baseline mb-1">
+                    <label htmlFor="date" className="block text-sm font-medium text-text-secondary">Fecha</label>
+                    <p className="text-text-secondary text-sm">{formattedDate}</p>
+                  </div>
+                  <input type="date" id="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-background border border-secondary/20 rounded-md py-2 px-3 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary shadow-inner" required />
                 </div>
-                <input type="date" id="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-background border border-secondary/20 rounded-md py-2 px-3 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary shadow-inner" required />
               </div>
             </div>
             <div className="mt-4">
@@ -445,10 +384,9 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
 
       <form onSubmit={handleSubmit} id="setupForm" ref={formRef} className="space-y-8">
             <div>
-                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-primary">Tipo de Partido</h3>
-                    <div className="flex items-center gap-2">
-                        <button type="button" onClick={onShowRosters} className="bg-surface/50 hover:bg-surface/75 text-white text-sm font-semibold py-1 px-3 rounded-lg transition-colors opacity-75 hover:opacity-100">Plantillas</button>
+                 <div className="relative mb-4">
+                    <h3 className="text-xl font-bold text-center text-primary">Tipo de Partido</h3>
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2">
                         {history.length > 0 && (<button type="button" onClick={onShowHistory} className="bg-surface/50 hover:bg-surface/75 text-white text-sm font-semibold py-1 px-3 rounded-lg transition-colors opacity-75 hover:opacity-100">Historial</button>)}
                     </div>
                 </div>
@@ -464,8 +402,8 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
             <div>
                  <h3 className="text-xl font-bold text-center text-primary mb-4">Equipos</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <TeamForm teamLabel={team1Label} teamColor={team1Color} setTeamColor={setTeam1Color} otherTeamColor={team2Color} playerNames={team1Names} setPlayerNames={setTeam1Names} positions={positions} isBenchEnabled={isBenchEnabled} benchNames={team1Bench} setBenchNames={setTeam1Bench} rosters={rosters} onApplyRoster={(roster) => handleApplyRoster(roster, setTeam1Names, setTeam1Bench)} />
-                    <TeamForm teamLabel={team2Label} teamColor={team2Color} setTeamColor={setTeam2Color} otherTeamColor={team1Color} playerNames={team2Names} setPlayerNames={setTeam2Names} positions={positions} isBenchEnabled={isBenchEnabled} benchNames={team2Bench} setBenchNames={setTeam2Bench} rosters={rosters} onApplyRoster={(roster) => handleApplyRoster(roster, setTeam2Names, setTeam2Bench)} />
+                    <TeamForm teamLabel={team1Label} teamColor={team1Color} setTeamColor={setTeam1Color} otherTeamColor={team2Color} playerNames={team1Names} setPlayerNames={setTeam1Names} positions={positions} isBenchEnabled={isBenchEnabled} benchNames={team1Bench} setBenchNames={setTeam1Bench} />
+                    <TeamForm teamLabel={team2Label} teamColor={team2Color} setTeamColor={setTeam2Color} otherTeamColor={team1Color} playerNames={team2Names} setPlayerNames={setTeam2Names} positions={positions} isBenchEnabled={isBenchEnabled} benchNames={team2Bench} setBenchNames={setTeam2Bench} />
                 </div>
             </div>
       </form>
