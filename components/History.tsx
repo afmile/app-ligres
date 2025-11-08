@@ -28,7 +28,7 @@ const History: React.FC<HistoryProps> = ({ history, onLoadMatch, onExportMatch, 
             {history.length > 0 ? (
                 <div className="space-y-4">
                     {history.map(match => (
-                        <div key={match.id} className="bg-gray-800 p-4 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4 hover:bg-gray-700/50 hover:border-gray-600 transition-all duration-200">
+                        <div key={match.id} className="bg-gray-800 p-4 rounded-lg border border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4 hover:bg-gray-700/50 hover:border-gray-600 transition-all duration-200 shadow-md">
                             <div className="flex-grow">
                                 <p className="font-bold text-lg text-white">{match.location}</p>
                                 <p className="text-sm text-gray-400">{formatDate(match.date)}</p>

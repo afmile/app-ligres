@@ -48,7 +48,7 @@ const BenchList: React.FC<{ title: string; players: BenchPlayer[], teamColor: Te
     if (players.length === 0) return null;
 
     return (
-        <div className={`rounded-lg overflow-hidden border-2 ${teamColorClasses[teamColor]} ${className}`}>
+        <div className={`rounded-lg overflow-hidden border-2 shadow-md ${teamColorClasses[teamColor]} ${className}`}>
             <h3 className={`text-center font-bold p-2 text-sm`}>{title}</h3>
             <ul className="p-2 space-y-1">
                 {players.map(p => <li key={p.id} className="font-semibold truncate text-sm">{p.name}</li>)}
@@ -234,7 +234,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
         {/* Visible UI for interaction */}
         <div className="w-full sm:max-w-sm md:max-w-md lg:max-w-2xl bg-gray-900 p-2 lg:p-4">
             {matchInfo && (
-                <div className="w-full text-center mb-4 p-3 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="w-full text-center mb-4 p-3 bg-gray-800 rounded-lg border border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
                     <div className="text-center sm:text-left">
                         <p className="font-bold text-lg text-green-400">{matchInfo.location}</p>
                         <p className="text-sm text-gray-300">{capitalizedDate}</p>

@@ -19,7 +19,7 @@ const FormationSelector: React.FC<{
   return (
     <div>
       <h3 className="text-lg font-semibold mb-3 text-center">Formación Táctica</h3>
-      <div className="flex bg-gray-700 rounded-lg p-1">
+      <div className="flex bg-gray-700 rounded-lg p-1 shadow-md">
         {formations.map((formation) => (
           <button
             key={formation}
@@ -139,7 +139,7 @@ const TeamForm: React.FC<{
                   value={playerNames[position] || ''}
                   onChange={e => handleNameChange(position, e.target.value)}
                   placeholder={position}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition shadow-inner"
                   required
                 />
               </div>
@@ -158,7 +158,7 @@ const TeamForm: React.FC<{
                   value={name}
                   onChange={e => handleBenchNameChange(index, e.target.value)}
                   placeholder={`Suplente ${index + 1}`}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                  className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition shadow-inner"
                 />
                 {index >= 3 && (
                     <button type="button" onClick={() => removeBenchPlayer(index)} className="p-2 text-red-400 hover:text-red-300">
@@ -331,12 +331,12 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
     <div className="w-full max-w-4xl mx-auto space-y-8 animate-fade-in">
       <div className="bg-gray-800/50 p-6 md:p-8 rounded-xl shadow-2xl border border-gray-700">
         <h3 className="text-xl font-bold text-center mb-4 text-green-400">Lugar y fecha</h3>
-        <div className="grid min-h-[210px] sm:min-h-[160px]">
+        <div className="grid min-h-[270px]">
            {/* Locked View */}
           <div className={`col-start-1 row-start-1 transition-all duration-500 ease-in-out ${isMatchInfoLocked ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`}>
              <div className="space-y-4">
-              <div className="p-4 bg-gray-900/50 rounded-lg"><p className="text-sm font-semibold text-gray-400 text-center">Lugar</p><div className="flex items-center justify-center gap-2 mt-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 20l-4.95-5.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg><p className="text-lg font-bold text-white text-center">{location}</p></div></div>
-              <div className="p-4 bg-gray-900/50 rounded-lg"><p className="text-sm font-semibold text-gray-400 text-center">Fecha</p><div className="flex items-center justify-center gap-2 mt-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg><p className="text-lg text-white text-center">{formattedDate}</p></div></div>
+              <div className="p-4 bg-gray-900/50 rounded-lg shadow-md"><p className="text-sm font-semibold text-gray-400 text-center">Lugar</p><div className="flex items-center justify-center gap-2 mt-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 20l-4.95-5.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg><p className="text-lg font-bold text-white text-center">{location}</p></div></div>
+              <div className="p-4 bg-gray-900/50 rounded-lg shadow-md"><p className="text-sm font-semibold text-gray-400 text-center">Fecha</p><div className="flex items-center justify-center gap-2 mt-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg><p className="text-lg text-white text-center">{formattedDate}</p></div></div>
               <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-end">
                   <button type="button" onClick={handleUnlockMatchInfo} className="bg-yellow-600 hover:bg-yellow-500 text-white font-semibold px-3 py-2 rounded-md text-sm flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2-2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg>Modificar</button>
                    <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-3 py-2 rounded-md text-sm flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg><span className="hidden sm:inline">Añadir al calendario</span><span className="sm:hidden">Calendario</span></a>
@@ -346,27 +346,50 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
           </div>
 
           {/* Unlocked (Form) View */}
-          <div className={`col-start-1 row-start-1 transition-all duration-500 ease-in-out ${isMatchInfoLocked ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
-            <div className="space-y-4"><div className="relative"><div className="flex justify-between items-center mb-1"><label htmlFor="location" className="block text-sm font-medium text-gray-300">Lugar del Partido</label>{recentLocations.length > 0 && (<button type="button" onClick={() => setShowRecentLocations(!showRecentLocations)} className="text-sm text-gray-400 hover:text-white opacity-75 hover:opacity-100 transition-opacity">Lugares recientes</button>)}</div><input type="text" id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ej: Cancha Los Héroes" className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" required/>{showRecentLocations && recentLocations.length > 0 && (<div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg"><ul className="py-1">{recentLocations.map(loc => (<li key={loc} onClick={() => { setLocation(loc); setShowRecentLocations(false); }} className="px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 cursor-pointer">{loc}</li>))}</ul></div>)}</div><div><label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-1">Fecha</label><input type="date" id="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500" required /><p className="text-center text-gray-400 mt-2 text-sm">{formattedDate}</p></div></div><div className="mt-4 flex flex-col sm:flex-row gap-2 justify-end">
-                <button 
-                    type="button" 
-                    onClick={handleLockMatchInfo} 
-                    disabled={!isMatchInfoValid || saveState !== 'idle'} 
-                    className="bg-green-600 hover:bg-green-500 text-white font-semibold px-3 py-2 rounded-md text-sm flex items-center justify-center gap-2 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 w-28 h-9"
-                >
-                    {saveState === 'idle' && (
-                        <><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" /></svg>
-                        <span>Guardar</span></>
-                    )}
-                    {saveState === 'saving' && (
-                        <><svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        <span>Guardando</span></>
-                    )}
-                    {saveState === 'saved' && (
-                        <><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                        <span>Guardado</span></>
-                    )}
-                </button>
+          <div className={`col-start-1 row-start-1 flex flex-col justify-center transition-all duration-500 ease-in-out ${isMatchInfoLocked ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
+            <div>
+                <div className="space-y-4">
+                    <div className="relative">
+                        <div className="flex justify-between items-center mb-1">
+                            <label htmlFor="location" className="block text-sm font-medium text-gray-300">Lugar del Partido</label>
+                            {recentLocations.length > 0 && (
+                                <button type="button" onClick={() => setShowRecentLocations(!showRecentLocations)} className="text-sm text-gray-400 hover:text-white opacity-75 hover:opacity-100 transition-opacity">Lugares recientes</button>
+                            )}
+                        </div>
+                        <input type="text" id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ej: Cancha Los Héroes" className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-inner" required/>
+                        {showRecentLocations && recentLocations.length > 0 && (
+                            <div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg"><ul className="py-1">{recentLocations.map(loc => (<li key={loc} onClick={() => { setLocation(loc); setShowRecentLocations(false); }} className="px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 cursor-pointer">{loc}</li>))}</ul></div>
+                        )}
+                    </div>
+                    <div>
+                        <div className="flex justify-between items-baseline mb-1">
+                            <label htmlFor="date" className="block text-sm font-medium text-gray-300">Fecha</label>
+                            <p className="text-gray-400 text-sm">{formattedDate}</p>
+                        </div>
+                        <input type="date" id="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500 shadow-inner" required />
+                    </div>
+                </div>
+                <div className="mt-6">
+                    <button 
+                        type="button" 
+                        onClick={handleLockMatchInfo} 
+                        disabled={!isMatchInfoValid || saveState !== 'idle'} 
+                        className="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition-colors duration-300 shadow-lg disabled:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center space-x-2"
+                    >
+                        {saveState === 'idle' && (
+                            <><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" /></svg>
+                            <span>Guardar</span></>
+                        )}
+                        {saveState === 'saving' && (
+                            <><svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span>Guardando</span></>
+                        )}
+                        {saveState === 'saved' && (
+                            <><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                            <span>Guardado</span></>
+                        )}
+                    </button>
+                </div>
             </div>
           </div>
         </div>
@@ -394,9 +417,9 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
             <div className="animate-fade-in space-y-4">
                 <div>
                     <label htmlFor="fee" className="sr-only">Valor Cuota por Jugador</label>
-                    <div className="relative"><div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><span className="text-gray-400 sm:text-sm">$</span></div><input type="number" id="fee" value={feeValue} onChange={e => setFeeValue(e.target.value)} placeholder="2500" className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 pl-7 pr-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"/><div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3"><span className="text-gray-400 sm:text-sm">CLP</span></div></div>
+                    <div className="relative"><div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><span className="text-gray-400 sm:text-sm">$</span></div><input type="number" id="fee" value={feeValue} onChange={e => setFeeValue(e.target.value)} placeholder="2500" className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 pl-7 pr-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-inner"/><div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3"><span className="text-gray-400 sm:text-sm">CLP</span></div></div>
                 </div>
-                {totalFee > 0 && <div className="p-4 bg-gray-900/50 rounded-lg text-center"><p className="text-sm font-semibold text-gray-400">Total a pagar por la cancha</p><p className="text-2xl font-bold text-white mt-1">{new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(totalFee)}</p></div>}
+                {totalFee > 0 && <div className="p-4 bg-gray-900/50 rounded-lg text-center shadow-md"><p className="text-sm font-semibold text-gray-400">Total a pagar por la cancha</p><p className="text-2xl font-bold text-white mt-1">{new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(totalFee)}</p></div>}
             </div>
         )}
       </div>

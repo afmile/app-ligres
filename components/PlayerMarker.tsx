@@ -130,7 +130,7 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, onMouseDown, isDrag
               onBlur={handleNameChangeCommit}
               onKeyDown={handleKeyDown}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-gray-900/80 text-white text-center text-xs font-bold rounded-md py-0.5 px-1 border border-green-500 outline-none"
+              className="w-full bg-gray-900/80 text-white text-center text-xs font-bold rounded-md py-0.5 px-1 border border-green-500 outline-none shadow-inner"
             />
           ) : (
             <span

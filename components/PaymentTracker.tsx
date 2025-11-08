@@ -18,11 +18,11 @@ const PlayerPaymentList: React.FC<{
     playerPayments: Record<number, boolean>;
     onUpdatePayment: (playerId: number, isPaid: boolean) => void;
 }> = ({ title, players, playerPayments, onUpdatePayment }) => (
-    <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
+    <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md">
         <h3 className="text-xl font-bold text-center text-green-400 mb-4">{title}</h3>
         <ul className="space-y-3">
             {players.map(player => (
-                <li key={player.id} className="flex items-center justify-between bg-gray-900/50 p-3 rounded-lg">
+                <li key={player.id} className="flex items-center justify-between bg-gray-900/50 p-3 rounded-lg shadow-md">
                     <span className="font-semibold text-gray-200">{player.name}</span>
                     <label className="flex items-center cursor-pointer">
                         <input
@@ -124,7 +124,7 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
                 </button>
             </div>
 
-            <div className="bg-gray-900/50 p-4 rounded-lg text-center">
+            <div className="bg-gray-900/50 p-4 rounded-lg text-center shadow-md">
                 <p className="text-sm font-semibold text-gray-400">Cuota por Jugador</p>
                 <p className="text-2xl font-bold text-white mt-1">{formatCurrency(feePerPlayer)}</p>
             </div>
@@ -134,13 +134,13 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
                 <PlayerPaymentList title="Equipo 2" players={team2} playerPayments={playerPayments} onUpdatePayment={onUpdatePayment} />
             </div>
 
-            <div className="bg-gray-900/50 p-6 rounded-lg space-y-4">
+            <div className="bg-gray-900/50 p-6 rounded-lg space-y-4 shadow-md">
                 <h3 className="text-xl font-bold text-center text-green-400 mb-4">Resumen de Pagos</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <div className="bg-gray-800 p-3 rounded-lg"><p className="text-sm text-gray-400">Total Recaudado</p><p className="text-lg font-bold text-green-400">{formatCurrency(totalCollected)}</p></div>
-                    <div className="bg-gray-800 p-3 rounded-lg"><p className="text-sm text-gray-400">Total Cancha</p><p className="text-lg font-bold text-white">{formatCurrency(totalAmount)}</p></div>
-                    <div className="bg-gray-800 p-3 rounded-lg"><p className="text-sm text-gray-400">Faltan por Pagar</p><p className="text-lg font-bold text-yellow-400">{remainingCount}</p></div>
-                    <div className="bg-gray-800 p-3 rounded-lg"><p className="text-sm text-gray-400">Monto Pendiente</p><p className="text-lg font-bold text-red-400">{formatCurrency(remainingAmount)}</p></div>
+                    <div className="bg-gray-800 p-3 rounded-lg shadow-md"><p className="text-sm text-gray-400">Total Recaudado</p><p className="text-lg font-bold text-green-400">{formatCurrency(totalCollected)}</p></div>
+                    <div className="bg-gray-800 p-3 rounded-lg shadow-md"><p className="text-sm text-gray-400">Total Cancha</p><p className="text-lg font-bold text-white">{formatCurrency(totalAmount)}</p></div>
+                    <div className="bg-gray-800 p-3 rounded-lg shadow-md"><p className="text-sm text-gray-400">Faltan por Pagar</p><p className="text-lg font-bold text-yellow-400">{remainingCount}</p></div>
+                    <div className="bg-gray-800 p-3 rounded-lg shadow-md"><p className="text-sm text-gray-400">Monto Pendiente</p><p className="text-lg font-bold text-red-400">{formatCurrency(remainingAmount)}</p></div>
                 </div>
             </div>
 

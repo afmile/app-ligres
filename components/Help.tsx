@@ -68,15 +68,15 @@ const Help: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 <AccordionItem title="3. ¿Cómo funcionan las opciones para compartir?">
                     <p>La aplicación ofrece tres formas distintas de compartir la información del partido, cada una con un propósito diferente:</p>
                     <div className="space-y-4 mt-2">
-                        <div className="bg-gray-900/50 p-3 rounded-lg">
+                        <div className="bg-gray-900/50 p-3 rounded-lg shadow-md">
                             <h4 className="font-bold text-green-400">Compartir Imagen</h4>
                             <p className="text-sm">Esta opción (disponible en la pantalla de la cancha) genera una imagen <strong className="text-white">visual (PNG)</strong> de la pizarra táctica. Es ideal para compartir en grupos de WhatsApp, redes sociales o donde quieras mostrar la alineación de forma gráfica y rápida.</p>
                         </div>
-                         <div className="bg-gray-900/50 p-3 rounded-lg">
+                         <div className="bg-gray-900/50 p-3 rounded-lg shadow-md">
                             <h4 className="font-bold text-green-400">Exportar a Texto</h4>
                             <p className="text-sm">Esta opción (disponible en el Historial) crea un archivo de <strong className="text-white">texto plano (.txt)</strong>. Contiene un resumen detallado del partido: equipos, jugadores, posiciones, suplentes y el estado de los pagos (si está activado). Es perfecto para enviar un resumen claro y completo por correo o chat.</p>
                         </div>
-                         <div className="bg-gray-900/50 p-3 rounded-lg">
+                         <div className="bg-gray-900/50 p-3 rounded-lg shadow-md">
                             <h4 className="font-bold text-green-400">Compartir / Importar Lista (Pagos)</h4>
                             <p className="text-sm">Esta opción (disponible en la pantalla de "Gestionar Pagos") exporta un archivo de <strong className="text-white">datos (.json)</strong>. Este archivo contiene TODA la información del partido en curso, incluyendo quién ha pagado. Su principal función es <strong className="text-white">sincronizar la información</strong>. Por ejemplo, puedes enviarle este archivo a la persona que administra los pagos, ella puede importarlo en su app, actualizar la lista y devolvértela.</p>
                         </div>
