@@ -66,6 +66,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
   const [activePlayerId, setActivePlayerId] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [showDragHint, setShowDragHint] = useState(true);
   
   const team1 = players.find(p => p.y > 50);
   const team2 = players.find(p => p.y <= 50);
@@ -107,6 +108,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
   }, [matchInfo]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>, id: number) => {
+    setShowDragHint(false);
     setActivePlayerId(id);
     if (!fieldRef.current) return;
   
@@ -311,6 +313,16 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
                     className="relative w-full bg-field rounded-lg shadow-2xl border-4 border-surface overflow-hidden aspect-[5/8]"
                 >
                     <VerticalFieldLinesSVG />
+                    {showDragHint && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 animate-fade-in">
+                            <div className="text-center p-4 bg-black/60 text-white rounded-lg shadow-xl backdrop-blur-sm flex items-center gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 opacity-75">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p className="font-semibold text-lg">Arrastra los jugadores para ordenarlos</p>
+                            </div>
+                        </div>
+                    )}
                     {players.map(player => (
                         <PlayerMarker
                             key={player.id}
