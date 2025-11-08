@@ -200,7 +200,32 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
   const [feeValue, setFeeValue] = useState('');
   const [team1Formation, setTeam1Formation] = useState<Formation>('Equilibrada');
   const [team2Formation, setTeam2Formation] = useState<Formation>('Equilibrada');
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const formRef = useRef<HTMLFormElement>(null);
+  
+  const playSaveSound = () => {
+    try {
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        if (!audioCtx) return;
+
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); 
+        
+        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime); 
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2);
+
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + 0.2);
+    } catch (error) {
+        console.error("Could not play sound:", error);
+    }
+  };
 
   useEffect(() => {
     try {
@@ -282,7 +307,19 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
   
   const recentLocations = useMemo(() => Array.from(new Set(history.map(m => m.location))).slice(0, 5), [history]);
 
-  const handleLockMatchInfo = () => { if (isMatchInfoValid) setIsMatchInfoLocked(true); };
+  const handleLockMatchInfo = () => {
+    if (isMatchInfoValid) {
+        playSaveSound();
+        setSaveState('saving');
+        setTimeout(() => {
+            setSaveState('saved');
+            setTimeout(() => {
+                setIsMatchInfoLocked(true);
+                setSaveState('idle');
+            }, 800);
+        }, 700);
+    }
+  };
   const handleUnlockMatchInfo = () => setIsMatchInfoLocked(false);
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -330,7 +367,27 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
               </div>
           </div>
         ) : (
-          <div className="animate-fade-in"><div className="space-y-4"><div className="relative"><div className="flex justify-between items-center mb-1"><label htmlFor="location" className="block text-sm font-medium text-gray-300">Lugar del Partido</label>{recentLocations.length > 0 && (<button type="button" onClick={() => setShowRecentLocations(!showRecentLocations)} className="text-sm text-gray-400 hover:text-white opacity-75 hover:opacity-100 transition-opacity">Lugares recientes</button>)}</div><input type="text" id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ej: Cancha Los Héroes" className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" required/>{showRecentLocations && recentLocations.length > 0 && (<div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg"><ul className="py-1">{recentLocations.map(loc => (<li key={loc} onClick={() => { setLocation(loc); setShowRecentLocations(false); }} className="px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 cursor-pointer">{loc}</li>))}</ul></div>)}</div><div><label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-1">Fecha</label><input type="date" id="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500" required /><p className="text-center text-gray-400 mt-2 text-sm">{formattedDate}</p></div></div><div className="mt-4 flex flex-col sm:flex-row gap-2 justify-end"><button type="button" onClick={handleLockMatchInfo} disabled={!isMatchInfoValid} className="bg-green-600 hover:bg-green-500 text-white font-semibold px-3 py-2 rounded-md text-sm flex items-center justify-center gap-2 disabled:bg-gray-600 disabled:cursor-not-allowed"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" /></svg>Guardar</button></div></div>
+          <div className="animate-fade-in"><div className="space-y-4"><div className="relative"><div className="flex justify-between items-center mb-1"><label htmlFor="location" className="block text-sm font-medium text-gray-300">Lugar del Partido</label>{recentLocations.length > 0 && (<button type="button" onClick={() => setShowRecentLocations(!showRecentLocations)} className="text-sm text-gray-400 hover:text-white opacity-75 hover:opacity-100 transition-opacity">Lugares recientes</button>)}</div><input type="text" id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ej: Cancha Los Héroes" className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" required/>{showRecentLocations && recentLocations.length > 0 && (<div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg"><ul className="py-1">{recentLocations.map(loc => (<li key={loc} onClick={() => { setLocation(loc); setShowRecentLocations(false); }} className="px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 cursor-pointer">{loc}</li>))}</ul></div>)}</div><div><label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-1">Fecha</label><input type="date" id="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500" required /><p className="text-center text-gray-400 mt-2 text-sm">{formattedDate}</p></div></div><div className="mt-4 flex flex-col sm:flex-row gap-2 justify-end">
+            <button 
+                type="button" 
+                onClick={handleLockMatchInfo} 
+                disabled={!isMatchInfoValid || saveState !== 'idle'} 
+                className="bg-green-600 hover:bg-green-500 text-white font-semibold px-3 py-2 rounded-md text-sm flex items-center justify-center gap-2 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 w-28 h-9"
+            >
+                {saveState === 'idle' && (
+                    <><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" /></svg>
+                    <span>Guardar</span></>
+                )}
+                {saveState === 'saving' && (
+                    <><svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span>Guardando</span></>
+                )}
+                {saveState === 'saved' && (
+                    <><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                    <span>Guardado</span></>
+                )}
+            </button>
+            </div></div>
         )}
       </div>
 
