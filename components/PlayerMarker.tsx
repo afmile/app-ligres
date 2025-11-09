@@ -93,10 +93,8 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, isTopTeam, onMouseD
   }, [player.name]);
 
   const getNameClasses = () => {
-    // Remove black background on field; keep for export for readability
-    return `text-xs font-bold px-1 py-0.5 rounded-md transition-colors uppercase cursor-pointer ${
-      isExporting ? 'bg-black/75 text-text-primary' : 'bg-transparent text-text-primary'
-    }`;
+    // Remove background both in field and export
+    return 'text-xs font-bold px-1 py-0.5 rounded-md transition-colors uppercase cursor-pointer bg-transparent text-text-primary';
   };
 
   const MARKER_WIDTH = 48; // w-12
