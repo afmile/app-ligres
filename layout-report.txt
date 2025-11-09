@@ -1,0 +1,194 @@
+Organizador Táctico Ligres – Layout y Exportación
+=================================================
+
+Este documento resume el código responsable de posicionar a los jugadores en la cancha y de generar la imagen exportada.
+
+1. App.tsx – Creación de jugadores
+----------------------------------
+
+const EDGE_PADDING = 2; // Prevent overlaps with field border
+
+const clampToField = (value: number) =>
+  Math.min(100 - EDGE_PADDING, Math.max(EDGE_PADDING, value));
+
+const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
+  const newPlayers: Player[] = [];
+  const newBenchPlayers: BenchPlayer[] = [];
+  let idCounter = 100;
+
+  const mapLayoutToPlayer = (team: TeamSetup, isTopTeam: boolean) => {
+    const layout = LAYOUTS[team.size];
+    layout.forEach((posLayout) => {
+      const horizontal = posLayout.zone.horizontal;
+      const vertical = posLayout.zone.vertical;
+      const baseX = clampToField(HORIZONTAL_ZONE_COORDS[horizontal]);
+      const baseY = clampToField(VERTICAL_ZONE_COORDS[vertical]);
+      const y = isTopTeam ? 100 - baseY : baseY;
+
+      newPlayers.push({
+        id: idCounter++,
+        name: team.playerNames[posLayout.position] || `Jugador ${idCounter}`,
+        position: posLayout.position,
+        x: baseX,
+        y,
+        teamId: team.color,
+      });
+    });
+
+    team.bench.forEach((name) => {
+      if (name.trim()) {
+        newBenchPlayers.push({ id: idCounter++, name, teamId: team.color });
+      }
+    });
+  };
+
+  mapLayoutToPlayer(team1, false); // equipo inferior
+  mapLayoutToPlayer(team2, true);  // equipo superior (invierte Y)
+
+  return { players: newPlayers, benchPlayers: newBenchPlayers };
+};
+
+Explicación:
+- Cada posición toma una zona horizontal y vertical definida en constants.ts.
+- Se convierten a porcentajes (baseX/baseY) y se invierte el eje Y para el equipo superior.
+- Se agregan jugadores y banca a los arreglos consumidos por la cancha y el export.
+
+2. constants.ts – Zonas y layouts
+---------------------------------
+
+export const HORIZONTAL_ZONE_COORDS = {
+  'left-wide': 14,
+  'left-channel': 32,
+  center: 50,
+  'right-channel': 68,
+  'right-wide': 86,
+};
+
+export const VERTICAL_ZONE_COORDS = {
+  'goal-area': 92,
+  'deep-defense': 82,
+  'wide-defense': 72,
+  midfield: 60,
+  'attacking-midfield': 54,
+  'forward-line': 48,
+};
+
+export const DEFAULT_LAYOUT_7_PLAYERS = [
+  { position: 'Portero', zone: { horizontal: 'center', vertical: 'goal-area' } },
+  { position: 'Defensa Central', zone: { horizontal: 'center', vertical: 'deep-defense' } },
+  { position: 'Lateral Izquierdo', zone: { horizontal: 'left-wide', vertical: 'wide-defense' } },
+  { position: 'Lateral Derecho', zone: { horizontal: 'right-wide', vertical: 'wide-defense' } },
+  { position: 'Mediocampista 1', zone: { horizontal: 'left-channel', vertical: 'midfield' } },
+  { position: 'Mediocampista 2', zone: { horizontal: 'right-channel', vertical: 'midfield' } },
+  { position: 'Delantero', zone: { horizontal: 'center', vertical: 'forward-line' } },
+];
+
+Explicación:
+- Define cinco columnas (bandas) y seis franjas horizontales (profundidad).
+- Cada formación (6 o 7 jugadores) mapea las posiciones a esas zonas.
+- Modificando estos valores se mueve una fila/columna completa.
+
+3. PlayerMarker.tsx – Posicionamiento visual
+--------------------------------------------
+
+<div
+  className={`absolute w-12 h-14 select-none group ${
+    !isExporting ? '-translate-x-1/2 -translate-y-1/2 transition-transform duration-150 animate-pop-in' : ''
+  } ${isDragging ? 'cursor-grabbing scale-110 z-10' : 'cursor-grab'}`}
+  style={{
+    left: isExporting ? `calc(${player.x}% - 24px)` : `${player.x}%`,
+    top: isExporting ? `calc(${player.y}% - 28px)` : `${player.y}%`,
+    touchAction: 'none',
+    animationDelay: !isExporting ? `${(player.id - 100) * 20}ms` : undefined,
+  }}
+>
+  {/* Camiseta + nombre */}
+</div>
+
+Explicación:
+- Cada jugador se posiciona con `left/top` en porcentaje.
+- Durante la exportación se usan offsets absolutos para centrar la camiseta sin `translate`.
+
+4. SoccerField.tsx – Exportación de la imagen
+---------------------------------------------
+
+const handleShareImage = async () => {
+  const exportElement = exportRef.current;
+  if (!exportElement || isExporting) return;
+
+  setIsExporting(true);
+  (document.activeElement as HTMLElement)?.blur();
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  try {
+    const canvas = await html2canvas(exportElement, {
+      backgroundColor: '#0A0F1E',
+      scale: 2,
+      logging: false,
+      useCORS: true,
+    });
+
+    if (navigator.share && navigator.canShare) {
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], 'alineacion-tactica.jpg', { type: 'image/jpeg' });
+        try {
+          await navigator.share({
+            title: 'Alineación Táctica',
+            text: `Alineación para el partido en ${matchInfo?.location || ''}.`,
+            files: [file],
+          });
+        } catch (error) {
+          if ((error as Error).name !== 'AbortError') console.error('Error sharing:', error);
+        }
+      }, 'image/jpeg', 0.9);
+    } else {
+      const image = canvas.toDataURL('image/jpeg', 0.9);
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = 'alineacion-tactica.jpg';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  } catch (error) {
+    console.error('Error exporting image:', error);
+    alert('Hubo un error al generar la imagen. Por favor, inténtalo de nuevo.');
+  } finally {
+    setIsExporting(false);
+  }
+};
+
+// Contenedor oculto usado para la exportación
+<div
+  ref={exportRef}
+  className="absolute -top-[9999px] -left-[9999px] w-[500px] bg-background p-4 flex flex-col font-sans"
+>
+  {matchInfo && (
+    <div className="w-full text-center mb-4 px-3 py-2 text-text-primary">
+      <p className="font-bold text-2xl text-primary">{matchInfo.location}</p>
+      <p className="text-lg text-text-secondary">
+        {capitalizedDate} - {matchInfo.time} hrs
+      </p>
+    </div>
+  )}
+  <div className="relative w-full bg-field rounded-lg shadow-2xl border-4 border-surface overflow-hidden aspect-[5/8]">
+    <VerticalFieldLinesSVG />
+    {players.map((player) => (
+      <PlayerMarker
+        key={player.id}
+        player={player}
+        isTopTeam={player.y <= 50}
+        onMouseDown={() => {}}
+        isDragging={false}
+        onUpdateName={() => {}}
+        isExporting={true}
+      />
+    ))}
+  </div>
+</div>
+
+Explicación:
+- `exportRef` contiene una réplica oculta de la cancha (500px de ancho y la misma proporción 5:8).
+- `html2canvas` toma ese nodo y genera un JPEG; si el navegador soporta Web Share, se comparte directamente, si no se descarga.
+- Mientras `isExporting` está activo, los marcadores usan el modo sin animaciones ni drags.

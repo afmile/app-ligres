@@ -463,11 +463,29 @@ const PlayerSetup: React.FC<PlayerSetupProps> = ({ onSetupComplete, history, onS
       <form onSubmit={handleSubmit} id="setupForm" ref={formRef} className="space-y-8">
             <div>
                  <div className="relative mb-4">
+                    {rosters.length > 0 && (
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2">
+                            <button
+                                type="button"
+                                onClick={onShowRosters}
+                                className="bg-surface/50 hover:bg-surface/75 text-white text-sm font-semibold py-1 px-3 rounded-lg transition-colors opacity-75 hover:opacity-100"
+                            >
+                                Plantillas
+                            </button>
+                        </div>
+                    )}
                     <h3 className="text-xl font-bold text-center text-primary">Tipo de Partido</h3>
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                        <button type="button" onClick={onShowRosters} className="bg-surface/50 hover:bg-surface/75 text-white text-sm font-semibold py-1 px-3 rounded-lg transition-colors opacity-75 hover:opacity-100">Plantillas</button>
-                        {history.length > 0 && (<button type="button" onClick={onShowHistory} className="bg-surface/50 hover:bg-surface/75 text-white text-sm font-semibold py-1 px-3 rounded-lg transition-colors opacity-75 hover:opacity-100">Historial</button>)}
-                    </div>
+                    {history.length > 0 && (
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                            <button
+                                type="button"
+                                onClick={onShowHistory}
+                                className="bg-surface/50 hover:bg-surface/75 text-white text-sm font-semibold py-1 px-3 rounded-lg transition-colors opacity-75 hover:opacity-100"
+                            >
+                                Historial
+                            </button>
+                        </div>
+                    )}
                 </div>
                 <div className="bg-surface/75 p-6 md:p-8 rounded-xl shadow-2xl border border-secondary/20">
                     <div className="space-y-4">

@@ -47,6 +47,7 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, isTopTeam, onMouseD
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(player.name);
   const inputRef = useRef<HTMLInputElement>(null);
+  const markerRef = useRef<HTMLDivElement>(null);
 
   const teamColors = {
       red: '#EF4444', // error
@@ -95,16 +96,43 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, isTopTeam, onMouseD
     return 'text-xs font-bold px-1 py-0.5 rounded-md transition-colors uppercase cursor-pointer bg-black/75 text-text-primary';
   };
 
+  const MARKER_WIDTH = 48; // w-12
+  const MARKER_HEIGHT = 56; // h-14
+
+  const getExportStyles = () => {
+    const parent = markerRef.current?.parentElement;
+    if (!parent) {
+      return {
+        left: `calc(${player.x}% - 24px)`,
+        top: `calc(${player.y}% - 28px)`,
+      } as React.CSSProperties;
+    }
+    const cw = parent.clientWidth || parent.offsetWidth || 0;
+    const ch = parent.clientHeight || parent.offsetHeight || 0;
+    if (!cw || !ch) {
+      return {
+        left: `calc(${player.x}% - 24px)`,
+        top: `calc(${player.y}% - 28px)`,
+      } as React.CSSProperties;
+    }
+    const offsetXPercent = (MARKER_WIDTH / 2 / cw) * 100;
+    const offsetYPercent = (MARKER_HEIGHT / 2 / ch) * 100;
+    return {
+      left: `calc(${player.x}% - ${offsetXPercent}%)`,
+      top: `calc(${player.y}% - ${offsetYPercent}%)`,
+    } as React.CSSProperties;
+  };
+
   return (
     <div
-      className={`absolute w-12 h-14 -translate-x-1/2 -translate-y-1/2 select-none group ${
-        !isExporting ? 'transition-transform duration-150 animate-pop-in' : ''
+      ref={markerRef}
+      className={`absolute w-12 h-14 select-none group ${
+        !isExporting ? '-translate-x-1/2 -translate-y-1/2 transition-transform duration-150 animate-pop-in' : ''
       } ${
         isDragging ? 'cursor-grabbing scale-110 z-10' : 'cursor-grab'
       }`}
       style={{
-        left: `${player.x}%`,
-        top: `${player.y}%`,
+        ...(isExporting ? getExportStyles() : { left: `${player.x}%`, top: `${player.y}%` }),
         touchAction: 'none',
         animationDelay: !isExporting ? `${(player.id - 100) * 20}ms` : undefined
       }}

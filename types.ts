@@ -10,6 +10,15 @@ export type PositionName =
   | 'Mediocampista 2'
   | 'Delantero';
 
+export type HorizontalZone = 'left-wide' | 'left-channel' | 'center' | 'right-channel' | 'right-wide';
+export type VerticalZone =
+  | 'goal-area'
+  | 'deep-defense'
+  | 'wide-defense'
+  | 'midfield'
+  | 'attacking-midfield'
+  | 'forward-line';
+
 export interface Player {
   id: number;
   name: string;
@@ -27,7 +36,10 @@ export interface BenchPlayer {
 
 export interface PositionLayout {
   position: PositionName;
-  coordinates: { x: number; y: number };
+  zone: {
+    horizontal: HorizontalZone;
+    vertical: VerticalZone;
+  };
 }
 
 export interface TeamSetup {

@@ -6,64 +6,52 @@ import History from './components/History';
 import PaymentTracker from './components/PaymentTracker';
 import Help from './components/Help';
 import RosterManager from './components/RosterManager';
-import { LAYOUTS, APP_VERSION } from './constants';
+import { LAYOUTS, APP_VERSION, HORIZONTAL_ZONE_COORDS, VERTICAL_ZONE_COORDS } from './constants';
 
 const HISTORY_STORAGE_KEY = 'soccerLineupHistory';
 const CURRENT_MATCH_STATE_KEY = 'currentMatchState';
 const ROSTER_STORAGE_KEY = 'soccerRosters';
+
+const EDGE_PADDING = 2; // Prevent overlaps with field border
+
+const clampToField = (value: number) => Math.min(100 - EDGE_PADDING, Math.max(EDGE_PADDING, value));
 
 const createPlayersFromSetup = (team1: TeamSetup, team2: TeamSetup) => {
     const newPlayers: Player[] = [];
     const newBenchPlayers: BenchPlayer[] = [];
     let idCounter = 100;
 
-    // Add margins to prevent players from being placed on the very edge of the field.
-    const HORIZONTAL_MARGIN = 5; // 5% margin on each side
-    const VERTICAL_MARGIN = 5;   // 5% margin on top/bottom, plus space from centerline
+    const mapLayoutToPlayer = (team: TeamSetup, isTopTeam: boolean) => {
+        const layout = LAYOUTS[team.size];
+        layout.forEach((posLayout) => {
+            const horizontal = posLayout.zone.horizontal;
+            const vertical = posLayout.zone.vertical;
+            const baseX = clampToField(HORIZONTAL_ZONE_COORDS[horizontal]);
+            const baseY = clampToField(VERTICAL_ZONE_COORDS[vertical]);
+            const y = isTopTeam ? 100 - baseY : baseY;
 
-    const fieldWidth = 100 - (HORIZONTAL_MARGIN * 2);
-    const halfFieldHeight = 50 - VERTICAL_MARGIN - (VERTICAL_MARGIN / 2); 
-    const topHalfBase = VERTICAL_MARGIN;
-    const bottomHalfBase = 100 - VERTICAL_MARGIN - halfFieldHeight;
+            newPlayers.push({
+                id: idCounter++,
+                name: team.playerNames[posLayout.position] || `Jugador ${idCounter}`,
+                position: posLayout.position,
+                x: baseX,
+                y,
+                teamId: team.color,
+            });
+        });
+
+        team.bench.forEach((name) => {
+            if (name.trim()) {
+                newBenchPlayers.push({ id: idCounter++, name, teamId: team.color });
+            }
+        });
+    };
 
     // Team 1 (Bottom half, attacking "up")
-    const layout1 = LAYOUTS[team1.size];
-    layout1.forEach((posLayout) => {
-      newPlayers.push({
-        id: idCounter++,
-        name: team1.playerNames[posLayout.position] || `Jugador ${idCounter}`,
-        position: posLayout.position,
-        x: HORIZONTAL_MARGIN + (posLayout.coordinates.x / 100 * fieldWidth),
-        y: bottomHalfBase + (posLayout.coordinates.y / 100 * halfFieldHeight),
-        teamId: team1.color,
-      });
-    });
-
-    team1.bench.forEach((name) => {
-        if(name.trim()) {
-            newBenchPlayers.push({ id: idCounter++, name, teamId: team1.color });
-        }
-    });
-
+    mapLayoutToPlayer(team1, false);
     // Team 2 (Top half, attacking "down")
-    const layout2 = LAYOUTS[team2.size];
-    layout2.forEach((posLayout) => {
-      newPlayers.push({
-        id: idCounter++,
-        name: team2.playerNames[posLayout.position] || `Jugador ${idCounter}`,
-        position: posLayout.position,
-        x: HORIZONTAL_MARGIN + ((100 - posLayout.coordinates.x) / 100 * fieldWidth),
-        y: topHalfBase + ((100 - posLayout.coordinates.y) / 100 * halfFieldHeight),
-        teamId: team2.color,
-      });
-    });
-    
-    team2.bench.forEach((name) => {
-        if(name.trim()) {
-            newBenchPlayers.push({ id: idCounter++, name, teamId: team2.color });
-        }
-    });
-    
+    mapLayoutToPlayer(team2, true);
+
     return { players: newPlayers, benchPlayers: newBenchPlayers };
 };
 
