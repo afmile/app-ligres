@@ -65,6 +65,10 @@
       button:active, a[href]:active {
           transform: scale(0.95);
       }
+
+      /* Color picker: mostrar solo el marco verde externo */
+      .color-picker button:focus { box-shadow: none !important; outline: none !important; }
+      .color-picker button > span { display: none !important; }
 </style>
 </head>
   <body class="bg-background text-text-primary">

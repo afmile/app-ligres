@@ -101,7 +101,7 @@ const TeamForm: React.FC<{
     <div className="bg-surface p-6 rounded-xl border border-secondary/20 flex flex-col space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-4 text-center">Color del Equipo</h3>
-        <div ref={buttonContainerRef} className="relative grid grid-cols-4 gap-2">
+        <div ref={buttonContainerRef} className="relative grid grid-cols-4 gap-2 color-picker">
           <div 
             className="absolute z-10 border-2 border-primary rounded-md transition-all duration-300 ease-in-out pointer-events-none"
             style={indicatorStyle}
