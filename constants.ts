@@ -1,6 +1,6 @@
 import { PositionLayout, PositionName, HorizontalZone, VerticalZone } from './types';
 
-export const APP_VERSION = '1.1.0';
+export const APP_VERSION = '1.1.1';
 
 export const HORIZONTAL_ZONE_COORDS: Record<HorizontalZone, number> = {
   'left-wide': 14,
