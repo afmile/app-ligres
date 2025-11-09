@@ -99,7 +99,7 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, isTopTeam, onMouseD
   const MARKER_WIDTH = 48; // w-12
   const MARKER_HEIGHT = 56; // h-14
 
-  const getExportStyles = () => {
+  const getCenteredStyles = () => {
     const parent = markerRef.current?.parentElement;
     if (!parent) {
       return {
@@ -127,12 +127,12 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, isTopTeam, onMouseD
     <div
       ref={markerRef}
       className={`absolute w-12 h-14 select-none group ${
-        !isExporting ? '-translate-x-1/2 -translate-y-1/2 transition-transform duration-150 animate-pop-in' : ''
+        !isExporting ? 'transition-transform duration-150 animate-pop-in' : ''
       } ${
         isDragging ? 'cursor-grabbing scale-110 z-10' : 'cursor-grab'
       }`}
       style={{
-        ...(isExporting ? getExportStyles() : { left: `${player.x}%`, top: `${player.y}%` }),
+        ...getCenteredStyles(),
         touchAction: 'none',
         animationDelay: !isExporting ? `${(player.id - 100) * 20}ms` : undefined
       }}
