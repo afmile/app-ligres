@@ -11,9 +11,10 @@ interface HistoryProps {
 
 const History: React.FC<HistoryProps> = ({ history, onLoadMatch, onExportMatch, onBack, onClearHistory }) => {
     
-    const formatDate = (isoString: string) => {
+    const formatDate = (isoString: string, time: string) => {
         const date = new Date(isoString);
-        return new Intl.DateTimeFormat('es-ES', { dateStyle: 'full' }).format(date);
+        const formatted = new Intl.DateTimeFormat('es-ES', { dateStyle: 'full' }).format(date);
+        return `${formatted} - ${time} hrs`;
     };
 
     return (
@@ -31,7 +32,7 @@ const History: React.FC<HistoryProps> = ({ history, onLoadMatch, onExportMatch, 
                         <div key={match.id} className="bg-surface p-4 rounded-lg border border-secondary/20 flex flex-col sm:flex-row justify-between items-center gap-4 hover:bg-surface/75 hover:border-secondary/30 transition-all duration-200 shadow-md">
                             <div className="flex-grow">
                                 <p className="font-bold text-lg text-text-primary">{match.location}</p>
-                                <p className="text-sm text-text-secondary">{formatDate(match.date)}</p>
+                                <p className="text-sm text-text-secondary">{formatDate(match.date, match.time)}</p>
                             </div>
                             <div className="flex-shrink-0 flex items-center gap-2">
                                 <button onClick={() => onExportMatch(match)} className="bg-secondary hover:bg-blue-400 text-white font-semibold px-4 py-2 rounded-md text-sm transition-colors">

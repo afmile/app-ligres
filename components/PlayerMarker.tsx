@@ -7,6 +7,7 @@ interface PlayerMarkerProps {
   onMouseDown: (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => void;
   isDragging: boolean;
   onUpdateName: (id: number, newName: string) => void;
+  isExporting?: boolean;
 }
 
 const JerseyIcon: React.FC<{ color: string; strokeColor: string; className?: string }> = ({
@@ -42,7 +43,7 @@ const JerseyIcon: React.FC<{ color: string; strokeColor: string; className?: str
 };
 
 
-const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, isTopTeam, onMouseDown, isDragging, onUpdateName }) => {
+const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, isTopTeam, onMouseDown, isDragging, onUpdateName, isExporting = false }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(player.name);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -91,34 +92,21 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, isTopTeam, onMouseD
   }, [player.name]);
 
   const getNameClasses = () => {
-    const baseClassesWithBg = 'text-xs font-bold px-1 py-0.5 rounded-md transition-colors uppercase cursor-pointer';
-    const baseClassesWithoutBg = 'text-xs font-bold uppercase cursor-pointer';
-
-    if (isTopTeam) { // Top team (visitor) always has a background
-        if (player.teamId === 'white') {
-            return `${baseClassesWithBg} bg-black/75 text-text-primary`;
-        }
-        return `${baseClassesWithBg} bg-white/75 text-black`;
-    }
-    
-    // Bottom team (home) has no background
-    if (player.teamId === 'white') {
-        return `${baseClassesWithoutBg} text-black`;
-    }
-    // Add a drop shadow to white text for better readability on the green field with white lines
-    return `${baseClassesWithoutBg} text-text-primary [text-shadow:0_1px_2px_rgba(0,0,0,0.7)]`;
+    return 'text-xs font-bold px-1 py-0.5 rounded-md transition-colors uppercase cursor-pointer bg-black/75 text-text-primary';
   };
 
   return (
     <div
-      className={`absolute w-12 h-14 -translate-x-1/2 -translate-y-1/2 select-none group transition-transform duration-150 animate-pop-in ${
+      className={`absolute w-12 h-14 -translate-x-1/2 -translate-y-1/2 select-none group ${
+        !isExporting ? 'transition-transform duration-150 animate-pop-in' : ''
+      } ${
         isDragging ? 'cursor-grabbing scale-110 z-10' : 'cursor-grab'
       }`}
       style={{
         left: `${player.x}%`,
         top: `${player.y}%`,
         touchAction: 'none',
-        animationDelay: `${(player.id - 100) * 20}ms`
+        animationDelay: !isExporting ? `${(player.id - 100) * 20}ms` : undefined
       }}
       onMouseDown={(e) => {
         if (!isEditing) {
@@ -133,7 +121,7 @@ const PlayerMarker: React.FC<PlayerMarkerProps> = ({ player, isTopTeam, onMouseD
         }
       }}
     >
-      <div className="relative w-full h-full flex flex-col items-center justify-start filter drop-shadow-lg">
+      <div className={`relative w-full h-full flex flex-col items-center justify-start ${!isExporting ? 'filter drop-shadow-lg' : ''}`}>
         <JerseyIcon 
             color={jerseyColor}
             strokeColor={strokeColor}

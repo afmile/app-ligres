@@ -41,6 +41,7 @@ export interface Match {
   id: string;
   location: string;
   date: string; // Stored as ISO string
+  time: string; // Stored as HH:mm format
   team1Setup: TeamSetup;
   team2Setup: TeamSetup;
   feePerPlayer?: number;

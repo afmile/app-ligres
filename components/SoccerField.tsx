@@ -10,7 +10,7 @@ interface SoccerFieldProps {
   updatePlayerPosition: (id: number, x: number, y: number) => void;
   updatePlayerName: (id: number, newName: string) => void;
   onReset: () => void;
-  matchInfo: { location: string, date: string } | null;
+  matchInfo: { location: string, date: string, time: string } | null;
   feePerPlayer?: number;
   onGoToPayments: () => void;
 }
@@ -84,22 +84,19 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
   const calendarUrl = useMemo(() => {
     if (!matchInfo) return '#';
     
-    const { location, date } = matchInfo;
+    const { location, date, time } = matchInfo;
     const eventTitle = `Partido Ligres, ${location}`;
-    const startDate = new Date(date);
+    const startDate = new Date(`${new Date(date).toISOString().split('T')[0]}T${time}`);
     
     const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + 1);
+    endDate.setHours(startDate.getHours() + 2); // Assume 2hr event
 
-    const formatAllDay = (d: Date) => d.toISOString().split('T')[0].replace(/-/g, '');
+    const formatForUrl = (d: Date) => d.toISOString().replace(/-|:|\.\d{3}/g, '');
     
-    const formattedStartDate = formatAllDay(startDate);
-    const formattedEndDate = formatAllDay(endDate);
-
     const params = new URLSearchParams({
         action: 'TEMPLATE',
         text: eventTitle,
-        dates: `${formattedStartDate}/${formattedEndDate}`,
+        dates: `${formatForUrl(startDate)}/${formatForUrl(endDate)}`,
         location: location,
         details: 'Partido de fútbol organizado con Organizador Táctico Ligres.'
     });
@@ -209,7 +206,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
         if (navigator.share && navigator.canShare) {
              canvas.toBlob(async (blob) => {
                 if (blob) {
-                    const file = new File([blob], 'alineacion-tactica.png', { type: 'image/png' });
+                    const file = new File([blob], 'alineacion-tactica.jpg', { type: 'image/jpeg' });
                     try {
                         await navigator.share({
                             title: 'Alineación Táctica',
@@ -222,12 +219,12 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
                        }
                     }
                 }
-            }, 'image/png');
+            }, 'image/jpeg', 0.9);
         } else {
-            const image = canvas.toDataURL('image/png', 1.0);
+            const image = canvas.toDataURL('image/jpeg', 0.9);
             const link = document.createElement('a');
             link.href = image;
-            link.download = 'alineacion-tactica.png';
+            link.download = 'alineacion-tactica.jpg';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -247,15 +244,15 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
         {/* Off-screen container for image export */}
         <div
             ref={exportRef}
-            className="absolute -top-[9999px] -left-[9999px] w-[500px] h-[800px] bg-background p-4 flex flex-col font-sans"
+            className="absolute -top-[9999px] -left-[9999px] w-[500px] bg-background p-4 flex flex-col font-sans"
         >
             {matchInfo && (
                 <div className="w-full text-center mb-4 px-3 py-2 text-text-primary">
                     <p className="font-bold text-2xl text-primary">{matchInfo.location}</p>
-                    <p className="text-lg text-text-secondary">{capitalizedDate}</p>
+                    <p className="text-lg text-text-secondary">{capitalizedDate} - {matchInfo.time} hrs</p>
                 </div>
             )}
-            <div className="relative w-full h-full bg-field rounded-lg shadow-2xl border-4 border-surface overflow-hidden">
+            <div className="relative w-full bg-field rounded-lg shadow-2xl border-4 border-surface overflow-hidden aspect-[5/8]">
                 <VerticalFieldLinesSVG />
                 {players.map(player => (
                     <PlayerMarker
@@ -265,6 +262,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
                         onMouseDown={() => {}}
                         isDragging={false}
                         onUpdateName={() => {}}
+                        isExporting={true}
                     />
                 ))}
             </div>
@@ -276,7 +274,7 @@ const SoccerField: React.FC<SoccerFieldProps> = ({ players, benchPlayers, update
                 <div className="w-full text-center mb-4 p-3 bg-surface rounded-lg border border-secondary/20 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
                     <div className="text-center sm:text-left">
                         <p className="font-bold text-lg text-primary">{matchInfo.location}</p>
-                        <p className="text-sm text-text-secondary">{capitalizedDate}</p>
+                        <p className="text-sm text-text-secondary">{capitalizedDate} - {matchInfo.time} hrs</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <a 
